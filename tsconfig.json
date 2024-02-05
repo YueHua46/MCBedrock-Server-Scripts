@@ -1,15 +1,30 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES6",
     "baseUrl": "./src",
     "rootDir": "./src",
-    "types": ["node"],
-    "typeRoots": ["./node_modules/@types", "./src"],
-    "lib": ["ESNext"],
+    "types": [
+      "node"
+    ],
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src"
+    ],
+    "lib": [
+      "ESNext",
+      "ES2020"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist","build"],
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build"
+  ]
 }
