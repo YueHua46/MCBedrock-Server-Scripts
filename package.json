@@ -6,6 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "gulp",
     "pack": "gulp pack",
+    "zip": "gulp zip",
     "watch": "gulp watch"
   },
   "keywords": [],
@@ -33,8 +34,10 @@
     "glob-parent": "6.0.2"
   },
   "dependencies": {
-    "@minecraft/server": "^1.9.0-beta.1.20.60-preview.26",
-    "@minecraft/server-ui": "^1.2.0-beta.1.20.60-preview.26",
+    "@mcbe-mods/utils": "^0.1.1",
+    "@minecraft/server": "1.9.0-beta.1.20.60-preview.26",
+    "@minecraft/server-ui": "1.2.0-beta.1.20.60-preview.26",
+    "archiver": "^6.0.1",
     "esm": "^3.2.25",
     "gulp-util": "^3.0.8",
     "gulp-zip": "^6.0.0"
