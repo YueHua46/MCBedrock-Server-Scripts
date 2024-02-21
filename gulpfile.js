@@ -5,6 +5,7 @@ const rpManifestJson = require("./src/RP/manifest.json");
 const ts = require("gulp-typescript");
 const uglify = require("gulp-uglify");
 const archiver = require("archiver");
+const gulpIf = require("gulp-if");
 const os = require("os");
 
 const devBpPath =
@@ -36,19 +37,23 @@ async function init() {
 }
 
 function comprAndcompa() {
-  return src("src/BP/**/*.ts")
-    .pipe(
-      ts({
-        module: "es2020",
-        moduleResolution: "node",
-        lib: ["es2020", "dom"],
-        strict: true,
-        target: "es2020",
-        noImplicitAny: true,
-      })
-    )
-    .pipe(uglify())
-    .pipe(dest(`dist/${bpManifestJson.header.name}/`));
+  return (
+    src("src/BP/**/*.ts")
+      .pipe(
+        ts({
+          module: "es2020",
+          moduleResolution: "node",
+          lib: ["es2020", "dom"],
+          strict: true,
+          target: "es2020",
+          noImplicitAny: true,
+        })
+      )
+      // 排除config.js
+      //
+      .pipe(gulpIf(file => file.path.indexOf("config.js") === -1, uglify()))
+      .pipe(dest(`dist/${bpManifestJson.header.name}/`))
+  );
 }
 
 function resolveBP() {
