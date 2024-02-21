@@ -1,6 +1,6 @@
 import { Player, system, world } from '@minecraft/server'
 import { prefix } from './config'
-import { welcome } from './message'
+import { welcome } from './config'
 import commandClass from './CommandClass'
 import { color } from './color'
 

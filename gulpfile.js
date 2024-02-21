@@ -3,6 +3,7 @@ const fs = require("fs");
 const bpManifestJson = require("./src/BP/manifest.json");
 const rpManifestJson = require("./src/RP/manifest.json");
 const ts = require("gulp-typescript");
+const uglify = require("gulp-uglify");
 const archiver = require("archiver");
 const os = require("os");
 
@@ -46,6 +47,7 @@ function comprAndcompa() {
         noImplicitAny: true,
       })
     )
+    .pipe(uglify())
     .pipe(dest(`dist/${bpManifestJson.header.name}/`));
 }
 

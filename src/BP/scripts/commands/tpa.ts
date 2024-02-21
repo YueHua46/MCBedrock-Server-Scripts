@@ -1,8 +1,10 @@
 import { Player, world } from '@minecraft/server'
 import { MessageFormData } from '@minecraft/server-ui'
-import { prefix } from '../config'
+import { prefix, tpaCoolingTime } from '../config'
 import { IFunction } from '../CommandClass'
 import { color } from '../color'
+import { DynamicPropertyEnum } from '../DynamicProperty'
+import { getTimestampSecond } from '../utils/comparison'
 
 export const tpaCommand = {
   name: 'tpa',
@@ -33,11 +35,20 @@ async function tpa(sender: Player, args: string[]) {
     return
   }
 
+  const lastUseTimestemp = sender.getDynamicProperty(DynamicPropertyEnum.上次传送时间)
+  console.log('lastUseTimestemp', lastUseTimestemp)
+  const nowTimestemp = Date.now()
+  const coolingTime = getTimestampSecond(lastUseTimestemp as string, nowTimestemp)
+  if (coolingTime < tpaCoolingTime) {
+    sender.sendMessage(color.red(`请等待 ${Math.floor(tpaCoolingTime - coolingTime)} 秒后再次使用`))
+    return
+  }
+
   sender.sendMessage(color.green('请求已发送'))
 
   // 执行异步等待，等待玩家接受传送请求
   tpaWait(targetPlayer)
-    .then(msg => {
+    .then(response => {
       const targetPlayer = world.getAllPlayers().find(player => player.name === sender.name)
       if (targetPlayer) {
         sender.runCommand(`tp ${targetName}`)
@@ -47,8 +58,15 @@ async function tpa(sender: Player, args: string[]) {
       }
     })
     .catch(reason => {
-      sender.sendMessage(color.red(reason))
+      if (reason === 'UserBusy') {
+        sender.sendMessage(color.red(`用户处于忙碌状态（正在输入框或设置等界面）`))
+      } else {
+        sender.sendMessage(
+          color.red(`${color.red(`玩家`)} ${color.yellow(targetName)} ${color.red('拒绝了你的传送请求')}`)
+        )
+      }
     })
+  sender.setDynamicProperty(DynamicPropertyEnum.上次传送时间, Date.now())
 }
 // 等待玩家接受传送请求
 async function tpaWait(targetPlayer: Player): Promise<any> {
@@ -62,10 +80,12 @@ async function tpaWait(targetPlayer: Player): Promise<any> {
     form.button1(color.green('接受'))
     form.button2(color.red('拒绝'))
     form.show(targetPlayer).then(response => {
-      if (response.selection === 0) {
-        resolve('')
+      if (response.cancelationReason) {
+        reject(response.cancelationReason)
+      } else if (response.selection === 0) {
+        resolve(response)
       } else {
-        reject('传送请求已被拒绝')
+        reject(response)
       }
     })
   })

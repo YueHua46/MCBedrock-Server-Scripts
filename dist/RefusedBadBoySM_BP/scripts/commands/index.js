@@ -1,2 +1,1 @@
-export * from './help';
-export * from './tpa';
+export*from"./help";export*from"./tpa";

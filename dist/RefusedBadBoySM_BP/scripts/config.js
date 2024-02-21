@@ -1,2 +1,1 @@
-// 命令前缀
-export const prefix = '\\';
+import{color}from"./color";import CommandClass from"./CommandClass";const prefix="\\",tpaCoolingTime=30,welcome={rawtext:[{text:color.green("欢迎加入我们得服务器！服务器已经预装了插件。\n")},{text:color.green("请输入： ")+color.yellow(""+prefix+CommandClass.getFunction("help")?.name)+color.green(" 获得详细信息！")}]};export{prefix,tpaCoolingTime,welcome};
