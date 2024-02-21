@@ -7,9 +7,9 @@ import { helpCommand } from './commands/help'
 
 export interface IFunction {
   name: string
-  desc: string | RawMessage
-  usage?: string | RawMessage
-  handler: (sender: Player, ...args: any) => any
+  desc: string
+  usage: string
+  handler: (sender: Player, ...args: any[]) => any
 }
 
 class CommandClass {
@@ -20,10 +20,10 @@ class CommandClass {
     this.addFunction(helpCommand)
   }
 
-  run(action: string, sender: Player, args: any[]) {
+  run(action: string, sender: Player, ...args: any[]) {
     const command = this.getFunctions().find(f => f.name === action)
     if (!command) return sender.sendMessage('未知命令')
-    command.handler(sender, args.join(' '))
+    command.handler(sender, args)
   }
 
   addFunction({ name, desc, usage, handler }: IFunction) {

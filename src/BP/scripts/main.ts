@@ -2,6 +2,7 @@ import { Player, system, world } from '@minecraft/server'
 import { prefix } from './config'
 import { welcome } from './message'
 import commandClass from './CommandClass'
+import { color } from './color'
 
 world.afterEvents.playerSpawn.subscribe(data => {
   const { player, initialSpawn } = data
@@ -15,7 +16,7 @@ world.beforeEvents.chatSend.subscribe(async data => {
   if (message.startsWith(prefix)) {
     const [action, ...args] = message.slice(prefix.length).split(' ')
     const command = commandClass.getFunctions().find(f => f.name === action)
-    if (!command) return sender.sendMessage('未知命令')
-    system.run(() => command.handler(sender, args.join(' ')))
+    if (!command) return sender.sendMessage(color.red('未知命令'))
+    system.run(() => command.handler(sender, args))
   }
 })

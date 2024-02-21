@@ -7,11 +7,11 @@ class CommandClass {
         this.addFunction(tpaCommand);
         this.addFunction(helpCommand);
     }
-    run(action, sender, args) {
+    run(action, sender, ...args) {
         const command = this.getFunctions().find(f => f.name === action);
         if (!command)
             return sender.sendMessage('未知命令');
-        command.handler(sender, args.join(' '));
+        command.handler(sender, args);
     }
     addFunction({ name, desc, usage, handler }) {
         this.functions.push({ name, desc, usage, handler });
