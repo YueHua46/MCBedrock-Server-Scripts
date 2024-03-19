@@ -2,6 +2,10 @@
 
 simple scripts on the minecraft bedrock server
 
+## version
+
+> 1.20.70
+
 ## environment
 
 - nodejs > 18
