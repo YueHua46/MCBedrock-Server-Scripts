@@ -18,7 +18,7 @@ simple scripts on the minecraft bedrock server
 
 2. tpa ✅
 
-   players tp request
+   players teleport request
 
 3. land ❎
 
