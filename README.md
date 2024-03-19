@@ -1,36 +1,40 @@
 # MC Server Scripts
 
-simple scripts on the minecraft bedrock server
+我的世界基岩服务器上的简单脚本
 
-## version
+## 对应版本要求
 
 > 1.20.70
 
-## environment
+## 环境
 
 - nodejs > 18
 - pnpm
 - gulp
 
-## TODOS
+## 任务清单
 
-### COMMANDS
+### 命令
 
 1. help ✅
 
-   help menu
+   帮助菜单
 
 2. tpa ✅
 
-   players teleport request
+   玩家之间传送请求
 
 3. land ❎
 
-   land manage
+   领地管理
+
+4. death count
+
+   每当玩家死亡时，计数
 
 ...
 
-## development
+## 开发
 
 ### dev
 
