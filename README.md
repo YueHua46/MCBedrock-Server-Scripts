@@ -13,12 +13,15 @@ simple scripts on the minecraft bedrock server
 ### COMMANDS
 
 1. help ✅
+
    help menu
 
 2. tpa ✅
+
    players tp request
 
 3. land ❎
+
    land manage
 
 ...
