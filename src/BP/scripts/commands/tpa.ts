@@ -4,7 +4,7 @@ import { prefix, tpaCoolingTime } from '../config'
 import { IFunction } from '../CommandClass'
 import { color } from '../color'
 import { DynamicPropertyEnum } from '../DynamicProperty'
-import { getTimestampSecond } from '../utils/comparison'
+import { getTimestampSecond } from '../utils'
 
 export const tpaCommand = {
   name: 'tpa',
