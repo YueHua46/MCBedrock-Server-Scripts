@@ -30,12 +30,12 @@ simple scripts on the minecraft bedrock server
 
 ### dev
 
-> pnpm run watch
+> npm run watch
 
 ### build（folders）
 
-> pnpm run build
+> npm run build
 
 ### pack（build mcpack）
 
-> pnpm run pack
+> npm run pack

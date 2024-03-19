@@ -1,4 +1,5 @@
 import { Player, world } from '@minecraft/server'
+import * as MC from '@minecraft/server'
 import { MessageFormData } from '@minecraft/server-ui'
 import { prefix, tpaCoolingTime } from '../config'
 import { IFunction } from '../CommandClass'
@@ -69,7 +70,7 @@ async function tpa(sender: Player, args: string[]) {
   sender.setDynamicProperty(DynamicPropertyEnum.上次传送时间, Date.now())
 }
 // 等待玩家接受传送请求
-async function tpaWait(targetPlayer: Player): Promise<any> {
+async function tpaWait(targetPlayer: MC.Player): Promise<any> {
   return new Promise((resolve, reject) => {
     // 给targetPlayer弹出UI
     const form = new MessageFormData()
@@ -77,6 +78,7 @@ async function tpaWait(targetPlayer: Player): Promise<any> {
     form.body(
       `${color.green('玩家')} ${color.yellow(targetPlayer.name)} ${color.green('请求传送到你身边，是否接受？')}`
     )
+    targetPlayer
     form.button1(color.green('接受'))
     form.button2(color.red('拒绝'))
     form.show(targetPlayer).then(response => {
