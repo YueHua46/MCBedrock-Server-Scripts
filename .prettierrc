@@ -1,15 +1,15 @@
 {
-    "semi": false,
-    "singleQuote": true,
-    "arrowParens": "avoid",
-    "printWidth": 120,
-    "overrides": [
-        {
-            "files": "*.js",
-            "options": {
-                "semi": true,
-                "singleQuote": false
-            }
-        }
-    ]
+  "semi": false,
+  "singleQuote": true,
+  "arrowParens": "avoid",
+  "printWidth": 120,
+  "overrides": [
+    {
+      "files": "*.js",
+      "options": {
+        "semi": true,
+        "singleQuote": false
+      }
+    }
+  ]
 }

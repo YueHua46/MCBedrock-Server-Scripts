@@ -1,0 +1,636 @@
+import { ActionFormData, ModalFormData, UIManager } from '@minecraft/server-ui'
+import { color } from '../../utils/color'
+import { Player, Vector3 } from '@minecraft/server'
+import { MinecraftDimensionTypes } from '@minecraft/vanilla-data'
+import land, { ILand } from './Land'
+import { openServerMenuForm } from '../Forms/Forms'
+import { openDialogForm } from '../Forms/Dialog'
+import { landAreas } from './Event'
+import { useFormatInfo, useFormatListInfo, useGetAllPlayer, useNotify } from '../../hooks/hooks'
+import { openLandManageForm, openSystemSettingForm } from '../Setting/Forms'
+
+// 领地申请
+function createLandApplyForm(player: Player) {
+  const form = new ModalFormData()
+  form.title('领地申请')
+
+  const defaultLandStartPos = landAreas.get(player.name)?.start || {
+    x: player.location.x.toFixed(0),
+    y: player.location.y.toFixed(0),
+    z: player.location.z.toFixed(0),
+  }
+  const defaultLandEndPos = landAreas.get(player.name)?.end || {
+    x: player.location.x.toFixed(0),
+    y: player.location.y.toFixed(0),
+    z: player.location.z.toFixed(0),
+  }
+
+  form.textField(color.white('领地名称'), color.gray('请输入领地名称'), '')
+  form.textField(
+    color.white('领地起始点'),
+    color.gray('请输入领地起始点'),
+    `${defaultLandStartPos.x} ${defaultLandStartPos.y} ${defaultLandStartPos.z}`,
+  )
+  form.textField(
+    color.white('领地结束点'),
+    color.gray('请输入领地结束点'),
+    `${defaultLandEndPos.x} ${defaultLandEndPos.y} ${defaultLandEndPos.z}`,
+  )
+  form.submitButton('确认')
+
+  return form
+}
+
+function validateForm(formValues: (string | number | boolean)[] | undefined, player: Player): boolean {
+  if (formValues && formValues[0] && formValues[1] && formValues[2]) {
+    const landName = formValues[0] as string
+    const landStartPos = formValues[1] as string
+    const landEndPos = formValues[2] as string
+
+    const landStartPosVector3 = land.createVector3(landStartPos)
+    const landEndPosVector3 = land.createVector3(landEndPos)
+
+    if (typeof landStartPosVector3 === 'string' || typeof landEndPosVector3 === 'string') {
+      openDialogForm(
+        player,
+        {
+          title: '领地创建错误',
+          desc: color.red('表单格式填写有误，请重新填写！'),
+        },
+        () => {
+          openLandApplyForm(player)
+        },
+      )
+      return false
+    }
+
+    if (
+      landStartPosVector3.x === landEndPosVector3.x ||
+      landStartPosVector3.z === landEndPosVector3.z ||
+      landStartPosVector3.y === landEndPosVector3.y
+    ) {
+      openDialogForm(
+        player,
+        {
+          title: '领地创建错误',
+          desc: color.red('领地起始点和结束点不能在同一直线上，且不能为同一坐标点！'),
+        },
+        () => {
+          openLandApplyForm(player)
+        },
+      )
+      return false
+    }
+
+    return true
+  } else {
+    openDialogForm(
+      player,
+      {
+        title: '领地创建错误',
+        desc: color.red('表单未填写完整，请重新填写！'),
+      },
+      () => {
+        openLandApplyForm(player)
+      },
+    )
+    return false
+  }
+}
+
+export function openLandApplyForm(player: Player) {
+  const form = createLandApplyForm(player)
+
+  form.show(player).then(data => {
+    const { formValues, cancelationReason } = data
+    if (cancelationReason === 'UserClosed') return
+
+    if (validateForm(formValues, player)) {
+      const landName = formValues?.[0] as string
+      const landStartPos = formValues?.[1] as string
+      const landEndPos = formValues?.[2] as string
+      const landStartPosVector3 = land.createVector3(landStartPos)
+      const landEndPosVector3 = land.createVector3(landEndPos)
+
+      const landData: ILand = {
+        name: landName,
+        owner: player.name,
+        dimension: player.dimension.id as MinecraftDimensionTypes,
+        members: [player.name],
+        public_auth: {
+          break: false,
+          place: false,
+          useBlock: false,
+          isChestOpen: false,
+          useEntity: false,
+          useButton: false,
+        },
+        vectors: {
+          start: landStartPosVector3 as Vector3,
+          end: landEndPosVector3 as Vector3,
+        },
+      }
+
+      const res = land.addLand(landData)
+      if (typeof res === 'string') {
+        openDialogForm(
+          player,
+          {
+            title: '领地创建错误',
+            desc: color.red(res),
+          },
+          () => {
+            openLandApplyForm(player)
+          },
+        )
+      } else {
+        player.sendMessage(color.yellow(`领地 ${landName} 创建成功！`))
+        landAreas.delete(player.name)
+      }
+    }
+  })
+}
+
+// 领地公开权限
+
+export function openLandAuthForm(player: Player, myLand: ILand) {
+  const form = new ModalFormData()
+  const _myLand = land.db.get(myLand.name)
+
+  form.title('领地公开权限')
+  form.toggle(color.white('破坏权限'), _myLand.public_auth.break)
+  form.toggle(color.white('放置权限'), _myLand.public_auth.place)
+  form.toggle(color.white('使用功能性方块权限'), _myLand.public_auth.useBlock)
+  form.toggle(color.white('箱子是否公开'), _myLand.public_auth.isChestOpen)
+  form.toggle(color.white('按钮是否公开'), _myLand.public_auth.useButton ?? false)
+  form.toggle(color.white('实体是否允许交互'), _myLand.public_auth.useEntity)
+  form.submitButton('确认')
+
+  form.show(player).then(data => {
+    const { formValues, cancelationReason } = data
+    if (cancelationReason === 'UserClosed') return
+
+    const public_auth = {
+      break: formValues?.[0] as boolean,
+      place: formValues?.[1] as boolean,
+      useBlock: formValues?.[2] as boolean,
+      isChestOpen: formValues?.[3] as boolean,
+      useButton: formValues?.[4] as boolean,
+      useEntity: formValues?.[5] as boolean,
+    }
+
+    land.db.set(_myLand.name, {
+      ..._myLand,
+      public_auth,
+    })
+
+    openDialogForm(
+      player,
+      {
+        title: '领地公开权限',
+        desc: color.green('领地公开权限设置成功！'),
+      },
+      () => {
+        openLandDetailForm(player, _myLand)
+      },
+    )
+  })
+}
+
+// 领地成员添加
+
+export function openLandMemberApplyForm(player: Player, _land: ILand) {
+  const form = new ModalFormData()
+  const allPlayer = useGetAllPlayer()
+  const allPlayerNames = allPlayer.map(player => player.name)
+  form.title('领地成员申请')
+
+  form.dropdown(color.white('选择玩家'), allPlayerNames, 0)
+  form.submitButton('确认')
+
+  form.show(player).then(data => {
+    const { formValues, cancelationReason } = data
+    if (cancelationReason === 'UserClosed') return
+
+    const selectPlayerName = allPlayer[Number(formValues?.[0])].name
+
+    if (selectPlayerName) {
+      const targetPlayer = allPlayer.find(player => player.name === selectPlayerName)
+      if (!targetPlayer)
+        return openDialogForm(
+          player,
+          {
+            title: '领地成员申请',
+            desc: color.red('玩家不存在，请重新填写！'),
+          },
+          () => {
+            openLandMemberApplyForm(player, _land)
+          },
+        )
+
+      const res = land.addMember(_land.name, targetPlayer?.name)
+      if (typeof res === 'string') {
+        openDialogForm(
+          player,
+          {
+            title: '领地成员申请',
+            desc: color.red(res),
+          },
+          () => {
+            openLandMemberApplyForm(player, _land)
+          },
+        )
+      } else {
+        useNotify('chat', targetPlayer, `§a您已被 §e${player.name} §a添加到领地 §e${_land.name} §a成员中！`)
+        useNotify('chat', player, `§a玩家 §e${targetPlayer.name} §a已成功被添加到领地 §e${_land.name} §a成员中！`)
+      }
+    } else {
+      openDialogForm(
+        player,
+        {
+          title: '领地成员申请',
+          desc: color.red('表单未填写完整，请重新填写！'),
+        },
+        () => {
+          openLandMemberApplyForm(player, _land)
+        },
+      )
+    }
+  })
+}
+
+// 领地成员删除
+export function openLandMemberDeleteForm(player: Player, _land: ILand) {
+  const form = new ModalFormData()
+  form.title('领地成员删除')
+
+  // const allPlayer = useGetAllPlayer()
+  const allPlayerNames = _land.members
+
+  form.dropdown(color.white('选择玩家'), allPlayerNames)
+  form.submitButton('确认')
+
+  form.show(player).then(data => {
+    const { formValues, cancelationReason } = data
+    if (cancelationReason === 'UserClosed') return
+
+    const selectPlayerName = allPlayerNames[Number(formValues?.[0])]
+
+    if (selectPlayerName === _land.owner) {
+      return openDialogForm(
+        player,
+        {
+          title: '领地成员删除',
+          desc: color.red('领地拥有者不能被移除！'),
+        },
+        () => {
+          openLandMemberDeleteForm(player, _land)
+        },
+      )
+    }
+
+    if (selectPlayerName) {
+      const targetPlayer = allPlayerNames.find(playerName => playerName === selectPlayerName)
+      if (!targetPlayer)
+        return openDialogForm(
+          player,
+          {
+            title: '领地成员删除',
+            desc: color.red('玩家不存在，请重新填写！'),
+          },
+          () => {
+            openLandMemberDeleteForm(player, _land)
+          },
+        )
+
+      const res = land.removeMember(_land.name, targetPlayer)
+      if (typeof res === 'string') {
+        openDialogForm(
+          player,
+          {
+            title: '领地成员删除',
+            desc: color.red(res),
+          },
+          () => {
+            openLandMemberDeleteForm(player, _land)
+          },
+        )
+      } else {
+        useNotify('chat', player, `§a玩家 §e${targetPlayer} §a已成功被移除领地 §e${_land.name} §a成员！`)
+      }
+    } else {
+      openDialogForm(
+        player,
+        {
+          title: '领地成员删除',
+          desc: color.red('表单未填写完整，请重新填写！'),
+        },
+        () => {
+          openLandMemberDeleteForm(player, _land)
+        },
+      )
+    }
+  })
+}
+
+// 领地成员管理
+function createLandMemberForm(land: ILand) {
+  const form = new ActionFormData()
+  form.title('领地成员管理')
+
+  const body = useFormatListInfo([
+    {
+      title: '领地成员',
+      desc: '领地成员列表',
+      list: land.members,
+    },
+  ])
+
+  form.body(body)
+
+  const buttons = [
+    {
+      text: '添加成员',
+      icon: 'textures/ui/plus',
+    },
+    {
+      text: '删除成员',
+      icon: 'textures/ui/minus',
+    },
+    {
+      text: '返回',
+      icon: 'textures/ui/dialog_bubble_point',
+    },
+  ]
+
+  buttons.forEach(button => {
+    form.button(button.text, button.icon)
+  })
+
+  return form
+}
+
+export function openLandMemberForm(player: Player, land: ILand) {
+  const form = createLandMemberForm(land)
+
+  form.show(player).then(data => {
+    switch (data.selection) {
+      case 0:
+        openLandMemberApplyForm(player, land)
+        break
+      case 1:
+        openLandMemberDeleteForm(player, land)
+        break
+      case 2:
+        openLandDetailForm(player, land)
+        break
+    }
+  })
+}
+
+// 删除领地
+export function openLandDeleteForm(player: Player, _land: ILand, isAdmin: boolean = false) {
+  const form = new ActionFormData()
+  form.title('删除领地')
+  form.body(color.red('删除领地后不可恢复，请谨慎操作！'))
+  form.button('确认', 'textures/ui/check')
+  form.button('取消', 'textures/ui/cancel')
+
+  form.show(player).then(data => {
+    const { cancelationReason, selection } = data
+    if (cancelationReason === 'UserClosed') return
+
+    if (selection === 0) {
+      const res = land.removeLand(_land.name)
+      if (typeof res === 'string') {
+        openDialogForm(
+          player,
+          {
+            title: '删除领地',
+            desc: color.red(res),
+          },
+          () => {
+            openLandDetailForm(player, _land)
+          },
+        )
+      } else {
+        player.sendMessage(color.yellow(`领地 ${_land.name} 删除成功！`))
+      }
+    }
+  })
+}
+
+// 领地详细与管理
+function createLandDetailForm() {
+  const form = new ActionFormData()
+  form.title('领地详细')
+
+  const buttons = [
+    {
+      text: '领地成员管理',
+      icon: 'textures/ui/friend1_black_outline_2x',
+    },
+    {
+      text: '领地公开权限',
+      icon: 'textures/ui/icon_multiplayer',
+    },
+    {
+      text: '删除领地',
+      icon: 'textures/ui/cancel',
+    },
+    {
+      text: '返回',
+      icon: 'textures/ui/dialog_bubble_point',
+    },
+  ]
+
+  buttons.forEach(button => {
+    form.button(button.text, button.icon)
+  })
+
+  return form
+}
+
+export function openLandDetailForm(player: Player, land: ILand, isAdmin: boolean = false) {
+  const form = createLandDetailForm()
+
+  form.body(
+    useFormatListInfo([
+      {
+        title: '领地信息',
+        desc: '',
+        list: [
+          '领地名称: ' + color.yellow(land.name),
+          '领地坐标: ' +
+            color.yellow(
+              land.vectors.start.x +
+                ' ' +
+                land.vectors.start.y +
+                ' ' +
+                land.vectors.start.z +
+                ' -> ' +
+                land.vectors.end.x +
+                ' ' +
+                land.vectors.end.y +
+                ' ' +
+                land.vectors.end.z,
+            ),
+        ],
+      },
+      { title: '领地主人', desc: land.owner, list: [] },
+      { title: '领地成员', desc: land.members.join('、 '), list: [] },
+    ]),
+  )
+
+  form.show(player).then(data => {
+    switch (data.selection) {
+      case 0:
+        openLandMemberForm(player, land)
+        break
+      case 1:
+        openLandAuthForm(player, land)
+        break
+      case 2:
+        openLandDeleteForm(player, land, isAdmin)
+        break
+      case 3:
+        openLandListForm(player, isAdmin)
+        break
+    }
+  })
+}
+
+// 创建领地列表表单
+function createLandListForm() {
+  const form = new ActionFormData()
+  form.title('领地列表')
+  form.body({
+    rawtext: [
+      {
+        text: '',
+      },
+    ],
+  })
+  return form
+}
+
+// 打开领地列表表单
+export function openLandListForm(player: Player, isAdmin: boolean = false, page: number = 1) {
+  const form = createLandListForm()
+  const ll = land.db.getAll()
+  const myLands: ILand[] = []
+
+  for (const key in ll) {
+    const landData = ll[key]
+    if (landData.owner === player.name || isAdmin) {
+      myLands.push(landData)
+    }
+  }
+
+  if (myLands.length === 0) {
+    openDialogForm(
+      player,
+      {
+        title: '领地列表',
+        desc: color.red('您还没有领地，请先创建领地！'),
+      },
+      () => {
+        openLandManageForms(player)
+      },
+    )
+  } else {
+    const totalPages = Math.ceil(myLands.length / 10)
+    const start = (page - 1) * 10
+    const end = start + 10
+    const currentPageLands = myLands.slice(start, end)
+
+    currentPageLands.forEach(landData => {
+      form.button(`${landData.name} ${isAdmin ? landData.owner : ''}`, 'textures/ui/icon_new')
+    })
+    form.body(`第 ${page} 页 / 共 ${totalPages} 页`)
+
+    let previousButtonIndex = currentPageLands.length
+    let nextButtonIndex = currentPageLands.length
+    if (page > 1) {
+      form.button('上一页', 'textures/ui/arrow_left')
+      previousButtonIndex++
+      nextButtonIndex++
+    }
+    if (page < totalPages) {
+      form.button('下一页', 'textures/ui/arrow_right')
+      nextButtonIndex++
+    }
+
+    form.button('返回', 'textures/ui/dialog_bubble_point')
+
+    form.show(player).then(data => {
+      if (data.cancelationReason) return
+      const selectionIndex = data.selection
+      if (selectionIndex === null || selectionIndex === undefined) return
+
+      // 当前页的领地数量
+      const currentPageLandsCount = currentPageLands.length
+
+      if (selectionIndex < currentPageLandsCount) {
+        // 选择的是某个领地
+        openLandDetailForm(player, currentPageLands[selectionIndex], isAdmin)
+      } else if (selectionIndex === previousButtonIndex - 1 && page > 1) {
+        // 选择的是“上一页”
+        openLandListForm(player, isAdmin, page - 1)
+      } else if (selectionIndex === nextButtonIndex - 1 && page < totalPages) {
+        // 选择的是“下一页”
+        openLandListForm(player, isAdmin, page + 1)
+      } else if (selectionIndex === nextButtonIndex) {
+        // 选择的是“返回”
+        if (!isAdmin) openLandManageForms(player)
+        else openLandManageForm(player)
+      }
+    })
+  }
+}
+
+// 领地管理
+function createLandManageForm() {
+  const form = new ActionFormData()
+  form.title('§w领地管理')
+
+  const buttons = [
+    {
+      text: '§w领地列表',
+      icon: 'textures/ui/Scaffolding',
+    },
+    {
+      text: '§w领地申请',
+      icon: 'textures/ui/warning_sad_steve',
+    },
+    {
+      text: '§w返回',
+      icon: 'textures/ui/dialog_bubble_point',
+    },
+  ]
+
+  buttons.forEach(button => {
+    form.button(button.text, button.icon)
+  })
+
+  return form
+}
+
+// 打开领地管理表单
+export function openLandManageForms(player: Player) {
+  const form = createLandManageForm()
+
+  form.show(player).then(data => {
+    switch (data.selection) {
+      case 0:
+        openLandListForm(player)
+        break
+      case 1:
+        openLandApplyForm(player)
+        break
+      case 2:
+        openServerMenuForm(player)
+        break
+    }
+  })
+}

@@ -1,1 +1,2 @@
-import{system,world}from"@minecraft/server";import{prefix}from"./config";import{welcome}from"./config";import commandClass from"./CommandClass";import{color}from"./color";world.afterEvents.playerSpawn.subscribe(e=>{var{player:e,initialSpawn:r}=e;r&&e.sendMessage(welcome)}),world.beforeEvents.chatSend.subscribe(async e=>{const{message:r,sender:s}=e;if(e.cancel=!0,r.startsWith(prefix)){const[o,...n]=r.slice(prefix.length).split(" "),a=commandClass.getFunctions().find(e=>e.name===o);if(!a)return s.sendMessage(color.red("未知命令"));system.run(()=>a.handler(s,n))}});
+import './Events/index';
+// import './temp/main'

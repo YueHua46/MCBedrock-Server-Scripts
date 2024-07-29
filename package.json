@@ -4,10 +4,10 @@
   "description": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "gulp",
-    "pack": "gulp pack",
-    "zip": "gulp zip",
-    "watch": "gulp watch"
+    "build": "gulp --gulpfile gulpfile.mjs",
+    "pack": "gulp --gulpfile gulpfile.mjs pack",
+    "zip": "gulp --gulpfile gulpfile.mjs zip",
+    "watch": "gulp --gulpfile gulpfile.mjs watchTask"
   },
   "keywords": [],
   "author": "yuehua",
@@ -18,9 +18,10 @@
     "@types/node": "^20.11.5",
     "@types/uuid": "^9.0.7",
     "del": "^7.1.0",
-    "gulp": "^4.0.2",
+    "gulp": "^5.0.0",
     "gulp-babel": "^8.0.0",
     "gulp-if": "^3.0.0",
+    "gulp-prettier": "^6.0.0",
     "gulp-rename": "^2.0.0",
     "gulp-tree": "^0.1.4",
     "gulp-trim": "^1.0.2",
@@ -34,13 +35,16 @@
     "glob-parent": "6.0.2"
   },
   "dependencies": {
-    "@mcbe-mods/utils": "^0.1.1",
-    "@minecraft/server": "1.10.0-beta.1.20.70-stable",
-    "@minecraft/server-ui": "1.2.0-beta.1.20.70-stable",
+    "@minecraft/server": "1.12.0-beta.1.21.3-stable",
+    "@minecraft/server-net": "^1.0.0-beta.11940b24",
+    "@minecraft/server-ui": "1.2.0-beta.1.21.3-stable",
+    "@minecraft/vanilla-data": "^1.21.3",
     "archiver": "^6.0.1",
     "esm": "^3.2.25",
+    "gulp-changed": "^5.0.2",
     "gulp-concat": "^2.6.1",
-    "gulp-util": "^3.0.8",
-    "gulp-zip": "^6.0.0"
+    "gulp-util": "^1.0.0",
+    "gulp-zip": "^6.0.0",
+    "lodash": "^4.17.21"
   }
 }

@@ -1,1 +1,0 @@
-function getTimestampSecond(e,t){e="string"==typeof e?parseInt(e):e;return(("string"==typeof t?parseInt(t):t)-e)/1e3}export{getTimestampSecond};
