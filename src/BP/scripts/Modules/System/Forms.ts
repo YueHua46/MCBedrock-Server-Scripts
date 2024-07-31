@@ -1,4 +1,4 @@
-import { Player } from '@minecraft/server'
+import { Player, world } from '@minecraft/server'
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui'
 import { color } from '../../utils/color'
 import setting, { IModules } from './Setting'
@@ -139,6 +139,27 @@ export const openLandManageForm = (player: Player) => {
     }
   })
 }
+// 打开服务器名称设置表单
+export const openServerNameForm = (player: Player) => {
+  const form = new ModalFormData()
+  form.title('§w设置服务器名称')
+  form.textField('服务器名称', '杜绝熊孩服务器')
+  form.submitButton('§w确定')
+
+  form.show(player).then(data => {
+    if (data.canceled || data.cancelationReason) return
+    const { formValues } = data
+    if (formValues?.[0]) {
+      const serverName = formValues[0].toString()
+      world.setDynamicProperty('serverName', serverName)
+      openDialogForm(player, { title: '服务器名称设置成功', desc: color.green('服务器名称设置成功！') }, () =>
+        openSystemSettingForm(player),
+      )
+    } else {
+      useNotify('chat', player, '§c服务器名称设置失败')
+    }
+  })
+}
 
 // 打开功能开关表单
 export const openFunctionSwitchForm = (player: Player) => {
@@ -169,6 +190,11 @@ export const openFunctionSwitchForm = (player: Player) => {
       text: '§w帮助',
       id: 'help',
       state: setting.getState('help') ?? true,
+    },
+    {
+      text: '§w掉落物清理',
+      id: 'killItem',
+      state: setting.getState('killItem') ?? true,
     },
   ]
 
@@ -218,6 +244,11 @@ export const openSystemSettingForm = (player: Player) => {
       text: '通知设置',
       icon: 'textures/ui/icon_book_writable',
       action: () => openNotifyForms(player),
+    },
+    {
+      text: '设置服务器名称（用于进游戏时的标题显示）',
+      icon: 'textures/ui/promo_gift_small_yellow',
+      action: () => openServerNameForm(player),
     },
   ]
 

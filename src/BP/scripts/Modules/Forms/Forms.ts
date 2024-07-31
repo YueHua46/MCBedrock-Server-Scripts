@@ -6,8 +6,8 @@ import { openHelpMenuForm } from '../Help/Forms'
 import { useForceOpen } from '../../hooks/hooks'
 import { openBaseFunctionForm } from '../OtherFun/Forms'
 import { openWayPointMenuForms } from '../WayPoint/Forms'
-import { openSystemSettingForm } from '../Setting/Forms'
-import setting, { IModules } from '../Setting/Setting'
+import { openSystemSettingForm } from '../System/Forms'
+import setting, { IModules } from '../System/Setting'
 
 interface MenuItem {
   text: string

@@ -4,8 +4,8 @@ import { openServerMenuForm } from '../Forms/Forms';
 import wayPoint from './WayPoint';
 import { useFormatListInfo, useNotify } from '../../hooks/hooks';
 import { MinecraftDimensionTypes } from '../../types';
-import { openDialogForm } from '../Forms/Dialog';
-import { openSystemSettingForm } from '../Setting/Forms';
+import { openConfirmDialogForm, openDialogForm } from '../Forms/Dialog';
+import { openSystemSettingForm } from '../System/Forms';
 // Constants
 const ITEMS_PER_PAGE = 10;
 // 打开搜索指定用户坐标点表单
@@ -179,29 +179,60 @@ export const openWayPointDetailForm = (player, pointName, isAdmin = false, type)
         text: '删除',
         icon: 'textures/ui/cancel',
         action: () => {
-          const isSuccess = wayPoint.deletePoint(pointName);
-          if (isSuccess) {
+          openConfirmDialogForm(player, '删除坐标点', '是否确定删除该坐标点？', () => {
+            const isSuccess = wayPoint.deletePoint(pointName);
+            if (isSuccess) {
+              openDialogForm(
+                player,
+                {
+                  title: '坐标点删除成功',
+                  desc: color.green('坐标点删除成功！'),
+                },
+                () => openWayPointListForm(player, isAdmin, type),
+              );
+            } else {
+              openDialogForm(
+                player,
+                {
+                  title: '坐标点删除失败',
+                  desc: color.red('坐标点删除失败！'),
+                },
+                () => openWayPointListForm(player, isAdmin, type),
+              );
+            }
+          });
+        },
+      },
+    );
+    // Starred button
+    if (type === 'private') {
+      buttons.splice(1, 0, {
+        text: point.isStarred ? '取消置顶' : '置顶',
+        icon: 'textures/ui/filledStarFocus',
+        action: () => {
+          const isSuccess = wayPoint.toggleStar(pointName, !point.isStarred);
+          if (typeof isSuccess !== 'string') {
             openDialogForm(
               player,
               {
-                title: '坐标点删除成功',
-                desc: color.green('坐标点删除成功！'),
+                title: '置顶状态更新成功',
+                desc: color.green('置顶状态更新成功！'),
               },
-              () => openWayPointListForm(player, isAdmin, type),
+              () => openWayPointDetailForm(player, pointName, isAdmin, type),
             );
           } else {
             openDialogForm(
               player,
               {
-                title: '坐标点删除失败',
-                desc: color.red('坐标点删除失败！'),
+                title: '置顶状态更新失败',
+                desc: color.red('置顶状态更新失败！'),
               },
-              () => openWayPointListForm(player, isAdmin, type),
+              () => openWayPointDetailForm(player, pointName, isAdmin, type),
             );
           }
         },
-      },
-    );
+      });
+    }
   }
   buttons.push({
     text: '返回',
@@ -262,6 +293,11 @@ export const openWayPointListForm = (player, isAdmin = false, type = 'private', 
   if (isAdmin) wayPoints = wayPoint.getPoints();
   else if (type === 'private') wayPoints = wayPoint.getPlayerPoints(player);
   else wayPoints = wayPoint.getPublicPoints();
+  // 只将私人坐标点的置顶坐标移到列表的最前面
+  wayPoints.sort((a, b) => {
+    if (a.type === 'private' && b.type === 'private') return (b.isStarred ? 1 : 0) - (a.isStarred ? 1 : 0);
+    return 0;
+  });
   // 分页显示，当前页最多显示 10 个坐标点，超过10个则显示下一页和上一页（上一页按钮在第一页不显示，下一页在最后一页不显示）
   const totalPages = Math.ceil(wayPoints.length / 10);
   const start = (page - 1) * 10;
@@ -269,8 +305,13 @@ export const openWayPointListForm = (player, isAdmin = false, type = 'private', 
   const currentPageWayPoints = wayPoints.slice(start, end);
   form.body(`第 ${page} 页 / 共 ${totalPages} 页`);
   currentPageWayPoints.forEach(point => {
-    if (isAdmin) form.button(` ${point.playerName} ${point.name}`, 'textures/ui/World');
-    else form.button(` ${point.name} ${type === 'public' ? point.playerName : ''}`, 'textures/ui/World');
+    // 检查是否为私人坐标点，只有私人坐标点才显示星号符号
+    const starSymbol = point.type === 'private' ? (point.isStarred ? '' : '') : '';
+    if (isAdmin) {
+      form.button(`${starSymbol} ${point.playerName} ${point.name}`, 'textures/ui/World');
+    } else {
+      form.button(`${starSymbol} ${point.name} ${type === 'public' ? point.playerName : ''}`, 'textures/ui/World');
+    }
   });
   let previousButtonIndex = currentPageWayPoints.length;
   let nextButtonIndex = currentPageWayPoints.length;

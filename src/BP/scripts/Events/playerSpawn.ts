@@ -1,6 +1,6 @@
 import { world } from '@minecraft/server'
 import { useGetAllPlayer } from '../hooks/hooks'
-import setting from '../Modules/Setting/Setting'
+import setting from '../Modules/System/Setting'
 
 world.afterEvents.playerSpawn.subscribe(event => {
   const { player } = event

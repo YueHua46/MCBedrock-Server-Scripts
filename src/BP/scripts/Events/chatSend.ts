@@ -5,8 +5,8 @@ world.beforeEvents.chatSend.subscribe(event => {
   const { sender, message } = event
   if (message === '服务器菜单') {
     system.run(() => {
+      event.cancel = true
       openServerMenuForm(sender)
     })
-    event.cancel = true
   }
 })

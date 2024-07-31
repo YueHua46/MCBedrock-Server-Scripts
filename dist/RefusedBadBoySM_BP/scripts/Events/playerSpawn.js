@@ -1,5 +1,5 @@
 import { world } from '@minecraft/server';
-import setting from '../Modules/Setting/Setting';
+import setting from '../Modules/System/Setting';
 world.afterEvents.playerSpawn.subscribe(event => {
   const { player } = event;
   const isFirstJoin = player?.getDynamicProperty('isFirst');

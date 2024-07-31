@@ -5,8 +5,8 @@ import { openHelpMenuForm } from '../Help/Forms';
 import { useForceOpen } from '../../hooks/hooks';
 import { openBaseFunctionForm } from '../OtherFun/Forms';
 import { openWayPointMenuForms } from '../WayPoint/Forms';
-import { openSystemSettingForm } from '../Setting/Forms';
-import setting from '../Setting/Setting';
+import { openSystemSettingForm } from '../System/Forms';
+import setting from '../System/Setting';
 const menuItems = [
   {
     id: 'player',

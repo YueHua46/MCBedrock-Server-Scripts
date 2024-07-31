@@ -1,3 +1,4 @@
+import { world } from '@minecraft/server';
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui';
 import { openServerMenuForm } from '../Forms/Forms';
 import { RandomTp } from './RandomTp';
@@ -6,6 +7,7 @@ import prefix from './Prefix';
 import { openDialogForm } from '../Forms/Dialog';
 import { color } from '../../utils/color';
 import leaveMessage from './LeaveMessage';
+import { useNotify } from '../../hooks/hooks';
 function createServerInfoForm() {
   const form = new MessageFormData();
   form.title('§w服务器信息');
@@ -45,6 +47,20 @@ export function openBaseFunctionForm(player) {
     { text: '§w修改名称前缀', icon: 'textures/ui/icon_panda', action: () => openPrefixForm(player) },
     { text: '§w随机传送', icon: 'textures/ui/gift_square', action: () => RandomTp(player) },
     { text: '§w自杀', icon: 'textures/ui/bad_omen_effect', action: () => player.kill() },
+    {
+      text: '§w回到上次死亡地点',
+      icon: 'textures/ui/icon_fall',
+      action: () => {
+        const deathData = player.getDynamicProperty('lastDeath');
+        if (deathData?.length) {
+          const death = JSON.parse(deathData);
+          player.teleport(death.location, { dimension: world.getDimension(death.dimension.id) });
+          useNotify('actionbar', player, '§a你已回到上次死亡地点！');
+        } else {
+          openDialogForm(player, { title: '失败', desc: color.red('未找到上次死亡地点！') });
+        }
+      },
+    },
     { text: '§w服务器状态', icon: 'textures/ui/servers', action: () => openServerInfoForm(player) },
   ];
   form.title('§w其他功能');

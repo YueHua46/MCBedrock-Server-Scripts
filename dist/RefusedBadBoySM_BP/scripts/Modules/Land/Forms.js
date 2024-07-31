@@ -5,7 +5,7 @@ import { openServerMenuForm } from '../Forms/Forms';
 import { openDialogForm } from '../Forms/Dialog';
 import { landAreas } from './Event';
 import { useFormatListInfo, useGetAllPlayer, useNotify } from '../../hooks/hooks';
-import { openLandManageForm } from '../Setting/Forms';
+import { openLandManageForm } from '../System/Forms';
 // 领地申请
 function createLandApplyForm(player) {
   const form = new ModalFormData();
@@ -180,25 +180,16 @@ export function openLandMemberApplyForm(player, _land) {
   const allPlayerNames = allPlayer.map(player => player.name);
   form.title('领地成员申请');
   form.dropdown(color.white('选择玩家'), allPlayerNames, 0);
+  form.textField(color.white('或通过玩家名称添加（二选一，优先第二个）'), color.gray('输入玩家名称'), '');
   form.submitButton('确认');
   form.show(player).then(data => {
     const { formValues, cancelationReason } = data;
     if (cancelationReason === 'UserClosed') return;
     const selectPlayerName = allPlayer[Number(formValues?.[0])].name;
-    if (selectPlayerName) {
-      const targetPlayer = allPlayer.find(player => player.name === selectPlayerName);
-      if (!targetPlayer)
-        return openDialogForm(
-          player,
-          {
-            title: '领地成员申请',
-            desc: color.red('玩家不存在，请重新填写！'),
-          },
-          () => {
-            openLandMemberApplyForm(player, _land);
-          },
-        );
-      const res = land.addMember(_land.name, targetPlayer?.name);
+    const inputPlayerName = formValues?.[1];
+    const pn = inputPlayerName || selectPlayerName;
+    if (pn) {
+      const res = land.addMember(_land.name, pn);
       if (typeof res === 'string') {
         openDialogForm(
           player,
@@ -211,20 +202,11 @@ export function openLandMemberApplyForm(player, _land) {
           },
         );
       } else {
-        useNotify('chat', targetPlayer, `§a您已被 §e${player.name} §a添加到领地 §e${_land.name} §a成员中！`);
-        useNotify('chat', player, `§a玩家 §e${targetPlayer.name} §a已成功被添加到领地 §e${_land.name} §a成员中！`);
+        const targetPlayer = useGetAllPlayer().find(player => player.name === pn);
+        if (targetPlayer)
+          useNotify('chat', targetPlayer, `§a您已被 §e${player.name} §a添加到领地 §e${_land.name} §a成员中！`);
+        useNotify('chat', player, `§a玩家 §e${pn} §a已成功被添加到领地 §e${_land.name} §a成员中！`);
       }
-    } else {
-      openDialogForm(
-        player,
-        {
-          title: '领地成员申请',
-          desc: color.red('表单未填写完整，请重新填写！'),
-        },
-        () => {
-          openLandMemberApplyForm(player, _land);
-        },
-      );
     }
   });
 }

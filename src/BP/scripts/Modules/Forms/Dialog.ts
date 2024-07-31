@@ -16,4 +16,16 @@ function openDialogForm(player: Player, err: { title: string; desc: string }, cb
   })
 }
 
-export { openDialogForm }
+function openConfirmDialogForm(player: Player, title: string, desc: string, cb: () => void) {
+  const form = new ActionFormData()
+  form.title(title)
+  form.body(desc)
+  form.button('取消', 'font/images/deny.png')
+  form.button('确认', 'font/images/accept.png')
+  form.show(player).then(res => {
+    if (res.canceled || res.cancelationReason) return
+    res.selection === 1 && cb()
+  })
+}
+
+export { openDialogForm, openConfirmDialogForm }

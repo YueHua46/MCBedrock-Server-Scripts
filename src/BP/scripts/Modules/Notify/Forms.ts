@@ -3,7 +3,7 @@ import { ActionFormData, ModalFormData } from '@minecraft/server-ui'
 import { color } from '../../utils/color'
 import { openDialogForm } from '../Forms/Dialog'
 import notify from './Notify'
-import { openSystemSettingForm } from '../Setting/Forms'
+import { openSystemSettingForm } from '../System/Forms'
 
 export const openAddNotifyForm = (player: Player) => {
   const form = new ModalFormData()

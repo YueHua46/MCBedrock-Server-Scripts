@@ -1,6 +1,7 @@
 import { Player, RawMessage, system, world } from '@minecraft/server'
 import { color } from '../utils/color'
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui'
+import { MinecraftDimensionTypes } from '../types'
 
 export function useGetAllPlayer() {
   return world.getAllPlayers()
@@ -85,4 +86,21 @@ export const useForceOpen = async (player: Player, form: ActionFormData | Messag
     if (response.cancelationReason !== 'UserBusy') return response
   }
   return undefined
+}
+
+export const useItems = () => {
+  const owItems = world
+    .getDimension(MinecraftDimensionTypes.Overworld)
+    .getEntities()
+    .filter(e => e.typeId === 'minecraft:item')
+  const netherItems = world
+    .getDimension(MinecraftDimensionTypes.Nether)
+    .getEntities()
+    .filter(e => e.typeId === 'minecraft:item')
+  const endItems = world
+    .getDimension(MinecraftDimensionTypes.TheEnd)
+    .getEntities()
+    .filter(e => e.typeId === 'minecraft:item')
+  const allItems = owItems.concat(netherItems).concat(endItems)
+  return allItems
 }

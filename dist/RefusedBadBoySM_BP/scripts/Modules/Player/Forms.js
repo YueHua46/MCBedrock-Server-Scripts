@@ -2,6 +2,8 @@ import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
 import { openServerMenuForm } from '../Forms/Forms';
 import { useGetAllPlayer } from '../../hooks/hooks';
 import { color } from '../../utils/color';
+import PlayerSetting, { EFunNames } from './PlayerSetting';
+import { openDialogForm } from '../Forms/Dialog';
 // 创建传送请求表单
 function createRequestTpaForm(title, requestPlayer, targetPlayer, type) {
   const form = new ActionFormData();
@@ -104,6 +106,7 @@ function createPlayerActionForm() {
   const form = new ActionFormData();
   form.title('§w玩家操作');
   form.button('§wTPA玩家传送', 'textures/ui/enable_editor');
+  form.button('§w聊天栏配置', 'font/images/chat');
   form.button('§w返回', 'textures/ui/dialog_bubble_point');
   return form;
 }
@@ -111,13 +114,163 @@ function createPlayerActionForm() {
 export function openPlayerActionForm(player) {
   const form = createPlayerActionForm();
   form.show(player).then(data => {
+    if (data.cancelationReason || data.canceled) return;
     switch (data.selection) {
       case 0:
         openPlayerTpaForm(player);
         break;
       case 1:
+        openChatForm(player);
+        break;
+      case 2:
         openServerMenuForm(player);
         break;
+    }
+  });
+}
+// 聊天栏配置表单
+export function openChatForm(player) {
+  const form = new ActionFormData();
+  form.title('§w聊天栏');
+  const buttons = [
+    {
+      text: '聊天黑名单配置',
+      icon: 'font/images/chatBlockText',
+      action: () => openChatBlackForm(player),
+    },
+    {
+      text: '静音聊天栏配置',
+      icon: 'font/images/chatSpam',
+      action: () => openMuteChatForm(player),
+    },
+  ];
+  buttons.forEach(button => {
+    form.button(button.text, button.icon);
+  });
+  form.button('返回', 'textures/ui/dialog_bubble_point');
+  form.show(player).then(data => {
+    if (data.cancelationReason || data.canceled) return;
+    switch (data.selection) {
+      case buttons.length:
+        openServerMenuForm(player);
+        break;
+      default:
+        if (typeof data.selection !== 'number') return;
+        buttons[data.selection].action();
+        break;
+    }
+  });
+}
+// 移除聊天黑名单
+export function openDeleteChatBlackListForm(player) {
+  const form = new ActionFormData();
+  form.title('§w聊天黑名单列表');
+  const blackList = player.getDynamicProperty('ChatBlackList');
+  const _blackList = JSON.parse(blackList ?? '[]');
+  _blackList.forEach(name => {
+    form.button(name, 'textures/ui/Friend2');
+  });
+  form.button('§w返回', 'textures/ui/dialog_bubble_point');
+  form.show(player).then(data => {
+    if (data.cancelationReason || data.canceled) return;
+    if (typeof data.selection !== 'number') return;
+    switch (data.selection) {
+      case _blackList.length:
+        openChatBlackForm(player);
+        break;
+      default:
+        const targetPlayer = _blackList[data.selection];
+        const index = _blackList.indexOf(targetPlayer);
+        _blackList.splice(index, 1);
+        player.setDynamicProperty('ChatBlackList', JSON.stringify(_blackList));
+        openDialogForm(player, {
+          title: '删除成功',
+          desc: `§a已成功将 §b${targetPlayer} §a从聊天黑名单中移除！`,
+        });
+        break;
+    }
+  });
+}
+// 添加聊天黑名单
+export function openAddChatBlackListForm(player) {
+  const form = new ModalFormData();
+  form.title('§w添加聊天黑名单');
+  const allPlayers = useGetAllPlayer();
+  form.dropdown(
+    '§w选择对应玩家',
+    allPlayers.map(p => p.name),
+  );
+  form.submitButton('§w确认');
+  form.show(player).then(data => {
+    if (data.cancelationReason || data.canceled) return;
+    const { formValues } = data;
+    if (formValues) {
+      const blackList = player.getDynamicProperty('ChatBlackList');
+      const targetPlayer = allPlayers[formValues[0]].name;
+      if (blackList && blackList.length) {
+        const _blackList = JSON.parse(blackList);
+        _blackList.push(targetPlayer);
+        player.setDynamicProperty('ChatBlackList', JSON.stringify(_blackList));
+      } else {
+        player.setDynamicProperty('ChatBlackList', JSON.stringify([targetPlayer]));
+      }
+      openDialogForm(player, {
+        title: '添加成功',
+        desc: `§a已成功将 §b${targetPlayer} §a添加到聊天黑名单中！`,
+      });
+    }
+  });
+}
+// 聊天黑名单配置
+export function openChatBlackForm(player) {
+  const form = new ActionFormData();
+  form.title('§w聊天拉黑配置');
+  const buttons = [
+    {
+      text: '§w添加聊天黑名单',
+      icon: 'textures/ui/color_plus',
+      action: () => openAddChatBlackListForm(player),
+    },
+    {
+      text: '§w删除聊天黑名单',
+      icon: 'textures/ui/cancel',
+      action: () => openDeleteChatBlackListForm(player),
+    },
+  ];
+  buttons.forEach(button => {
+    form.button(button.text, button.icon);
+  });
+  form.button('返回', 'textures/ui/dialog_bubble_point');
+  form.show(player).then(data => {
+    if (data.cancelationReason || data.canceled) return;
+    switch (data.selection) {
+      case buttons.length:
+        openServerMenuForm(player);
+        break;
+      default:
+        if (typeof data.selection !== 'number') return;
+        buttons[data.selection].action();
+        break;
+    }
+  });
+}
+// 静音聊天栏配置
+export function openMuteChatForm(player) {
+  const form = new ModalFormData();
+  form.title('§w聊天栏');
+  const isOpenChat = player.getDynamicProperty('Chat');
+  if (isOpenChat === undefined) {
+    player.setDynamicProperty('Chat', true);
+  }
+  const _isOpenChat = JSON.parse(player.getDynamicProperty('Chat'));
+  form.toggle('§w是否开启聊天栏', _isOpenChat);
+  form.submitButton('§w确认');
+  form.show(player).then(data => {
+    if (data.cancelationReason || data.canceled) return;
+    const { formValues } = data;
+    if (formValues) {
+      PlayerSetting.turnPlayerFunction(EFunNames.Chat, player, formValues[0]);
+      player.sendMessage(`§b已${formValues[0] ? ' §a开启 ' : ' §c关闭 '}§b聊天栏`);
     }
   });
 }

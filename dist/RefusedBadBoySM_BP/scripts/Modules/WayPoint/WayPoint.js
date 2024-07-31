@@ -85,5 +85,12 @@ class WayPoint {
   getPointsByPlayer(playerName) {
     return this.db.values().filter(p => p.playerName === playerName);
   }
+  toggleStar(pointName, isStarred) {
+    const wayPoint = this.db.get(pointName);
+    if (!wayPoint) return '坐标点不存在';
+    wayPoint.isStarred = isStarred;
+    wayPoint.modified = getNowDate();
+    return this.db.set(wayPoint.name, wayPoint);
+  }
 }
 export default new WayPoint();
