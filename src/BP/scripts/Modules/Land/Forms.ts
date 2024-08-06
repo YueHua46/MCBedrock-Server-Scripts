@@ -124,6 +124,16 @@ export function openLandApplyForm(player: Player) {
           isChestOpen: false,
           useEntity: false,
           useButton: false,
+          explode: false,
+        },
+        config_public_auth: {
+          break: false,
+          place: false,
+          useBlock: false,
+          isChestOpen: false,
+          useEntity: false,
+          useButton: false,
+          explode: false,
         },
         vectors: {
           start: landStartPosVector3 as Vector3,
@@ -164,6 +174,7 @@ export function openLandAuthForm(player: Player, myLand: ILand) {
   form.toggle(color.white('箱子是否公开'), _myLand.public_auth.isChestOpen)
   form.toggle(color.white('按钮是否公开'), _myLand.public_auth.useButton ?? false)
   form.toggle(color.white('实体是否允许交互'), _myLand.public_auth.useEntity)
+  form.toggle(color.white('爆炸'), _myLand.public_auth.explode)
   form.submitButton('确认')
 
   form.show(player).then(data => {
@@ -177,6 +188,7 @@ export function openLandAuthForm(player: Player, myLand: ILand) {
       isChestOpen: formValues?.[3] as boolean,
       useButton: formValues?.[4] as boolean,
       useEntity: formValues?.[5] as boolean,
+      explode: formValues?.[6] as boolean,
     }
 
     land.db.set(_myLand.name, {
@@ -402,39 +414,148 @@ export function openLandDeleteForm(player: Player, _land: ILand, isAdmin: boolea
   })
 }
 
+// 领地转让
+export function openLandTransferForm(player: Player, _land: ILand) {
+  const form = new ModalFormData()
+  form.title('领地转让')
+
+  const allPlayer = useGetAllPlayer()
+  const allPlayerNames = allPlayer.map(player => player.name)
+
+  form.dropdown(color.white('选择玩家'), allPlayerNames)
+  form.submitButton('确认')
+
+  form.show(player).then(data => {
+    const { formValues, cancelationReason } = data
+    if (cancelationReason === 'UserClosed') return
+
+    const selectPlayerName = allPlayer[Number(formValues?.[0])].name
+
+    if (selectPlayerName) {
+      const res = land.transferLand(_land.name, selectPlayerName)
+      if (typeof res === 'string') {
+        openDialogForm(
+          player,
+          {
+            title: '领地转让失败',
+            desc: color.red(res),
+          },
+          () => {
+            openLandTransferForm(player, _land)
+          },
+        )
+      } else {
+        player.sendMessage(color.yellow(`领地 ${_land.name} 转让成功！`))
+      }
+    } else {
+      openDialogForm(
+        player,
+        {
+          title: '领地转让',
+          desc: color.red('表单未填写完整，请重新填写！'),
+        },
+        () => {
+          openLandTransferForm(player, _land)
+        },
+      )
+    }
+  })
+}
+// 领地公开权限的配置权限（只有领地主人可以配置）
+export function openLandAuthConfigForm(player: Player, _land: ILand) {
+  const form = new ModalFormData()
+  form.title('领地公开权限的配置权限')
+
+  form.toggle(color.white('是否允许成员配置 破坏权限'), _land.config_public_auth.break)
+  form.toggle(color.white('是否允许成员配置 放置权限'), _land.config_public_auth.place)
+  form.toggle(color.white('使是否允许成员配置 功能性方块权限'), _land.config_public_auth.useBlock)
+  form.toggle(color.white('是否允许成员配置 箱子是否公开'), _land.config_public_auth.isChestOpen)
+  form.toggle(color.white('是否允许成员配置 按钮是否公开'), _land.config_public_auth.useButton ?? false)
+  form.toggle(color.white('是否允许成员配置 实体是否允许交互'), _land.config_public_auth.useEntity)
+  form.toggle(color.white('是否允许成员配置 爆炸'), _land.config_public_auth.explode)
+  form.submitButton('确认')
+
+  form.show(player).then(data => {
+    const { formValues, cancelationReason } = data
+    if (cancelationReason === 'UserClosed') return
+
+    const config_public_auth = {
+      break: formValues?.[0] as boolean,
+      place: formValues?.[1] as boolean,
+      useBlock: formValues?.[2] as boolean,
+      isChestOpen: formValues?.[3] as boolean,
+      useButton: formValues?.[4] as boolean,
+      useEntity: formValues?.[5] as boolean,
+      explode: formValues?.[6] as boolean
+    }
+
+    land.db.set(_land.name, {
+      ..._land,
+      config_public_auth,
+    })
+
+    openDialogForm(
+      player,
+      {
+        title: '领地公开权限的配置权限',
+        desc: color.green('领地公开权限的配置权限设置成功！'),
+      },
+      () => {
+        openLandDetailForm(player, _land)
+      },
+    )
+  })
+}
+
 // 领地详细与管理
-function createLandDetailForm() {
+
+export function openLandDetailForm(player: Player, land: ILand, isAdmin: boolean = false) {
+  
   const form = new ActionFormData()
   form.title('领地详细')
-
+  const isOwner = land.owner === player.name
+  
   const buttons = [
-    {
-      text: '领地成员管理',
-      icon: 'textures/ui/friend1_black_outline_2x',
-    },
     {
       text: '领地公开权限',
       icon: 'textures/ui/icon_multiplayer',
+      action: () => openLandAuthForm(player, land),
+    },
+  ]
+
+  if(isOwner || isAdmin) {
+    const actions =  [{
+      text: '领地成员管理',
+      icon: 'textures/ui/friend1_black_outline_2x',
+      action: () => openLandMemberForm(player, land),
+    },
+    {
+      text:'领地转让',
+      icon: 'textures/ui/arrow_right',
+      action: () => openLandTransferForm(player, land),
+    },
+    {
+      text:'领地公开权限的配置权限',
+      icon: 'textures/ui/arrow_right',
+      action : () => openLandAuthConfigForm(player, land),
     },
     {
       text: '删除领地',
       icon: 'textures/ui/cancel',
-    },
-    {
-      text: '返回',
-      icon: 'textures/ui/dialog_bubble_point',
-    },
-  ]
+      action : () => openLandDeleteForm(player, land, isAdmin),
+    }]
+    buttons.push(...actions)
+  }
+
+  buttons.push({
+    text: '返回',
+    icon: 'textures/ui/dialog_bubble_point',
+    action : () => openLandListForm(player, isAdmin),
+  })
 
   buttons.forEach(button => {
     form.button(button.text, button.icon)
   })
-
-  return form
-}
-
-export function openLandDetailForm(player: Player, land: ILand, isAdmin: boolean = false) {
-  const form = createLandDetailForm()
 
   form.body(
     useFormatListInfo([
@@ -465,18 +586,11 @@ export function openLandDetailForm(player: Player, land: ILand, isAdmin: boolean
   )
 
   form.show(player).then(data => {
+    if(data.canceled || data.cancelationReason) return
+    if(data.selection === null || data.selection === undefined) return
     switch (data.selection) {
-      case 0:
-        openLandMemberForm(player, land)
-        break
-      case 1:
-        openLandAuthForm(player, land)
-        break
-      case 2:
-        openLandDeleteForm(player, land, isAdmin)
-        break
-      case 3:
-        openLandListForm(player, isAdmin)
+      default:
+        buttons[data.selection].action()
         break
     }
   })
@@ -496,15 +610,15 @@ function createLandListForm() {
   return form
 }
 
-// 打开领地列表表单
+// 打开领地列表表单（同样显示自己为成员的领地，但去掉了转让、删除、配置公开权限配置权限，因为这些只有领地主人才可以）
 export function openLandListForm(player: Player, isAdmin: boolean = false, page: number = 1) {
   const form = createLandListForm()
-  const ll = land.db.getAll()
+  const ll = land.getLandList()
   const myLands: ILand[] = []
 
   for (const key in ll) {
     const landData = ll[key]
-    if (landData.owner === player.name || isAdmin) {
+    if (landData.owner === player.name || isAdmin || landData.members.includes(player.name)) {
       myLands.push(landData)
     }
   }
@@ -527,7 +641,7 @@ export function openLandListForm(player: Player, isAdmin: boolean = false, page:
     const currentPageLands = myLands.slice(start, end)
 
     currentPageLands.forEach(landData => {
-      form.button(`${landData.name} ${isAdmin ? landData.owner : ''}`, 'textures/ui/icon_new')
+      form.button(`${landData.name} ${isAdmin ? landData.owner : landData.owner === player.name ? '（个人领地）' : '（他人领地）'}`, 'textures/ui/icon_new')
     })
     form.body(`第 ${page} 页 / 共 ${totalPages} 页`)
 

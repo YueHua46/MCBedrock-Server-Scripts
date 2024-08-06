@@ -14,6 +14,17 @@ export interface ILand {
     isChestOpen: boolean
     useEntity: boolean
     useButton: boolean
+    explode: boolean
+  }
+  // 领地公开权限的配置权限
+  config_public_auth: {
+    break: boolean
+    place: boolean
+    useBlock: boolean
+    isChestOpen: boolean
+    useEntity: boolean
+    useButton: boolean
+    explode: boolean
   }
   vectors: {
     start: Vector3
@@ -126,6 +137,14 @@ class Land {
     const lands = this.db.values()
     return lands.filter(land => land.owner === playerName)
   }
+  // 领地转让
+  transferLand(name: string, playerName: string) {
+    if (!this.db.has(name)) return '领地不存在'
+    const land = this.db.get(name) as ILand
+    land.owner = playerName
+    return this.db.set(name, land)
+  }
+
 }
 
 export default new Land()
