@@ -5,9 +5,12 @@ import rpManifestJson from './src/RP/manifest.json' with { type: 'json' }
 import ts from 'gulp-typescript'
 import prettier from 'gulp-prettier'
 import archiver from 'archiver'
+import dotenv from 'dotenv'
 import os from 'os'
 
-const env = process.argv[5] || 'windows' // linux or windows
+dotenv.config()
+
+const env = process.env.ENV || 'windows' // linux or windows
 
 let devBpPath, devRpPath
 if (env === 'windwos') {
@@ -17,10 +20,12 @@ if (env === 'windwos') {
   devRpPath =
     os.homedir() +
     '\\AppData\\Local\\Packages\\Microsoft.MinecraftUWP_8wekyb3d8bbwe\\LocalState\\games\\com.mojang\\development_resource_packs'
-} else {
+} else if (env === 'linux') {
   // linux 测试服务器路径
   devBpPath = '/root/MC_SERVER_LIST/MC_TEST_SERVER/development_behavior_packs'
   devRpPath = '/root/MC_SERVER_LIST/MC_TEST_SERVER/development_resource_packs'
+} else {
+  throw new Error('Unsupported OS')
 }
 
 console.log('bp path --> ', devBpPath)
