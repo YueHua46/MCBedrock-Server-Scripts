@@ -1,7 +1,7 @@
 import { series, src, dest, watch } from 'gulp'
 import fs from 'fs'
-import bpManifestJson from './src/BP/manifest.json' assert { type: 'json' }
-import rpManifestJson from './src/RP/manifest.json' assert { type: 'json' }
+import bpManifestJson from './src/BP/manifest.json' with { type: 'json' }
+import rpManifestJson from './src/RP/manifest.json' with { type: 'json' }
 import ts from 'gulp-typescript'
 import prettier from 'gulp-prettier'
 import archiver from 'archiver'
