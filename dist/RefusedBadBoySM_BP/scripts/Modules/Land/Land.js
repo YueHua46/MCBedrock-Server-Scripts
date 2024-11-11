@@ -103,5 +103,12 @@ class Land {
     const lands = this.db.values();
     return lands.filter(land => land.owner === playerName);
   }
+  // 领地转让
+  transferLand(name, playerName) {
+    if (!this.db.has(name)) return '领地不存在';
+    const land = this.db.get(name);
+    land.owner = playerName;
+    return this.db.set(name, land);
+  }
 }
 export default new Land();

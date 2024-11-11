@@ -168,13 +168,13 @@ async function cleanDevRP() {
 
 async function copyBP() {
   await cleanDevBP()
-  return src(`dist/${bpManifestJson.header.name}/**/*`).pipe(dest(devBpPath + `\\${bpManifestJson.header.name}`))
+  return src(`dist/${bpManifestJson.header.name}/**/*`).pipe(dest(devBpPath + `${env === 'windows' ? '\\' : '/'}${bpManifestJson.header.name}`))
 }
 
 async function copyRP() {
   await cleanDevRP()
   return src(`dist/${rpManifestJson.header.name}/**/*`, { encoding: false }).pipe(
-    dest(devRpPath + `\\${rpManifestJson.header.name}`),
+    dest(devRpPath + `${env === 'windows' ? '\\' : '/'}${rpManifestJson.header.name}`),
   )
 }
 

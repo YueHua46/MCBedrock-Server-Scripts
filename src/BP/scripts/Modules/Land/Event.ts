@@ -284,8 +284,10 @@ world.beforeEvents.explosion.subscribe(event => {
   const impactedBlocks = event.getImpactedBlocks()
   const impact = impactedBlocks.filter(block => {
     const { isInside, insideLand } = land.testLand(block.location, event.dimension.id)
-    // console.log('isInside', isInside, insideLand)
-    return !isInside
+    // 如果在领地内且开放爆炸权限，则返回true
+    // 如果不在领地内，则返回true
+    // 否则返回false
+    return isInside ? insideLand?.public_auth?.explode : true
   })
   event.setImpactedBlocks(impact)
 })
