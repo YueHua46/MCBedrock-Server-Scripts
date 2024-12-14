@@ -1,10 +1,21 @@
+import { SystemLog } from '../../utils/utils'
 import { Database } from '../Database'
 import './Events'
 
-export type IModules = 'player' | 'land' | 'wayPoint' | 'other' | 'help' | 'sm' | 'setting' | 'killItem'
+export type IModules =
+  | 'player'
+  | 'land'
+  | 'wayPoint'
+  | 'other'
+  | 'help'
+  | 'sm'
+  | 'setting'
+  | 'killItem'
+  | 'randomTpRange'
 
 class ServerSetting {
-  MAX_ITEMS = 1500
+  MAX_ITEMS = '1500'
+  RANDOM_TP_RANGE = '50000'
   constructor(private readonly db: Database = new Database<boolean>('setting')) {}
   turnOn(module: IModules) {
     console.log(`Turn on ${module}`)
@@ -22,14 +33,18 @@ class ServerSetting {
     this.db.set('help', true)
     this.db.set('sm', true)
     this.db.set('setting', true)
-    this.db.set('killItem', true)
+    this.db.set('killItem', this.MAX_ITEMS)
+    this.db.set('randomTpRange', this.RANDOM_TP_RANGE)
   }
   getState(module: IModules) {
     if (this.db.get(module) === undefined) this.init()
     return this.db.get(module)
   }
-  changeMaxItems(num: number) {
-    this.MAX_ITEMS = num
+  setState(module: IModules, state: boolean | string) {
+    SystemLog('setState enter')
+    SystemLog('module -->' + module)
+    SystemLog('state -->' + state)
+    this.db.set(module, state)
   }
 }
 

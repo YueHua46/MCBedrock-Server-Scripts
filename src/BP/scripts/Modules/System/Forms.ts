@@ -9,6 +9,7 @@ import { openDialogForm } from '../Forms/Dialog'
 import { openServerMenuForm } from '../Forms/Forms'
 import { openWayPointListForm } from '../WayPoint/Forms'
 import { openNotifyForms } from '../Notify/Forms'
+import { SystemLog } from '../../utils/utils'
 // 创建搜索玩家领地表单
 function createSearchLandForm() {
   const form = new ModalFormData()
@@ -143,7 +144,7 @@ export const openLandManageForm = (player: Player) => {
 export const openServerNameForm = (player: Player) => {
   const form = new ModalFormData()
   form.title('§w设置服务器名称')
-  form.textField('服务器名称', '杜绝熊孩服务器')
+  form.textField('服务器名称', '请输入服务器名称')
   form.submitButton('§w确定')
 
   form.show(player).then(data => {
@@ -221,26 +222,49 @@ export const openFunctionSwitchForm = (player: Player) => {
 }
 
 export const openKillItemSettingForm = (player: Player) => {
+  SystemLog('openKillItemSettingForm enter')
   const form = new ModalFormData()
-  form.title('§w触发掉落物清理的上限设置')
-  form.textField('触发掉落物清理的数量上限', '1500')
+  const killItem = (setting.getState('killItem') as string) || '1500'
+  try {
+    SystemLog('killItem -->' + killItem)
+    form.title('§w触发掉落物清理的上限设置')
+    form.textField('触发掉落物清理的数量上限', killItem.toString())
+    form.submitButton('§w确定')
+    form.show(player).then(data => {
+      if (data.canceled || data.cancelationReason) return
+      const { formValues } = data
+      if (formValues?.[0]) {
+        const num = formValues[0].toString()
+        setting.setState('killItem', num)
+        openDialogForm(
+          player,
+          {
+            title: '掉落物清理设置成功',
+            desc: color.green('掉落物清理设置成功！当世界当中的掉落物数量超过设置数量时，会触发自动清理掉落物。'),
+          },
+          () => openSystemSettingForm(player),
+        )
+      } else {
+        useNotify('chat', player, '§c掉落物清理设置失败')
+      }
+    })
+  } catch (error) {
+    SystemLog('openKillItemSettingForm error -->' + error)
+  }
+}
+
+export const openRandomTpSettingForm = (player: Player) => {
+  const form = new ModalFormData()
+  const randomTpRange = (setting.getState('randomTpRange') as number) || 50000
+  form.title('§w设置随机传送范围')
+  form.textField('随机传送范围', randomTpRange.toString())
   form.submitButton('§w确定')
   form.show(player).then(data => {
     if (data.canceled || data.cancelationReason) return
     const { formValues } = data
     if (formValues?.[0]) {
       const num = formValues[0].toString()
-      setting.changeMaxItems(Number(num))
-      openDialogForm(
-        player,
-        {
-          title: '掉落物清理设置成功',
-          desc: color.green('掉落物清理设置成功！当世界当中的掉落物数量超过设置数量时，会触发自动清理掉落物。'),
-        },
-        () => openSystemSettingForm(player),
-      )
-    } else {
-      useNotify('chat', player, '§c掉落物清理设置失败')
+      setting.setState('randomTpRange', num)
     }
   })
 }
@@ -249,8 +273,9 @@ export const openKillItemSettingForm = (player: Player) => {
 /**
  * 功能点：
  * 1. 设置掉落物清理数量
- * 2. 设置服务器名称
- * 3. 设置服务器通知
+ * 2. 设置随机传送范围
+ * 3. 设置服务器名称
+ * 4. 设置服务器通知
  */
 export const openCommonSettingForm = (player: Player) => {
   const form = new ActionFormData()
@@ -260,6 +285,11 @@ export const openCommonSettingForm = (player: Player) => {
       text: '设置掉落物清理数量',
       icon: 'textures/ui/icon_fall',
       action: () => openKillItemSettingForm(player),
+    },
+    {
+      text: '设置随机传送范围',
+      icon: 'textures/ui/RTX_Sparkle',
+      action: () => openRandomTpSettingForm(player),
     },
     {
       text: '设置服务器名称',

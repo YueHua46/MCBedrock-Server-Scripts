@@ -4,10 +4,11 @@ import { useItems } from '../../hooks/hooks'
 
 let isRunning = false
 system.runInterval(async () => {
+  const killItem = setting.getState('killItem')
   if (isRunning) return
-  if (!setting.getState('killItem')) return
+  if (!killItem) return
   const items = useItems()
-  if (items.length > setting.MAX_ITEMS) {
+  if (items.length > Number(killItem)) {
     isRunning = true
     world.sendMessage(' §e服务器掉落物过多，即将在30秒后清理掉落物！')
     await system.waitTicks(20 * 25)

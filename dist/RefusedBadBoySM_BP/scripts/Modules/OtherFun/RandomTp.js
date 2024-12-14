@@ -1,13 +1,14 @@
 import { useNotify } from '../../hooks/hooks';
 import { MinecraftEffectTypes } from '../../types';
+import setting from '../System/Setting';
 // 根据两个大小参数区间，来生成随机数
 export const RandomNumber = (min, max) => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
-const range = 50000;
 export const RandomTp = player => {
-  const x = RandomNumber(-Math.abs(range), Math.abs(range));
-  const z = RandomNumber(-Math.abs(range), Math.abs(range));
+  const range = setting.getState('randomTpRange');
+  const x = RandomNumber(-Math.abs(Number(range)), Math.abs(Number(range)));
+  const z = RandomNumber(-Math.abs(Number(range)), Math.abs(Number(range)));
   let y = player.dimension.heightRange.max;
   player.teleport({
     x,
