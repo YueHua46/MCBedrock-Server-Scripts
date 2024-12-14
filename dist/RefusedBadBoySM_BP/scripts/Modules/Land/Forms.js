@@ -110,6 +110,7 @@ export function openLandApplyForm(player) {
           useEntity: false,
           useButton: false,
           explode: false,
+          burn: true,
         },
         config_public_auth: {
           break: false,
@@ -119,6 +120,7 @@ export function openLandApplyForm(player) {
           useEntity: false,
           useButton: false,
           explode: false,
+          burn: false,
         },
         vectors: {
           start: landStartPosVector3,
@@ -156,6 +158,7 @@ export function openLandAuthForm(player, myLand) {
   form.toggle(color.white('按钮是否公开'), _myLand.public_auth.useButton ?? false);
   form.toggle(color.white('实体是否允许交互'), _myLand.public_auth.useEntity);
   form.toggle(color.white('爆炸'), _myLand.public_auth.explode);
+  form.toggle(color.white('是否允许岩浆或燃烧'), _myLand.public_auth.burn);
   form.submitButton('确认');
   form.show(player).then(data => {
     const { formValues, cancelationReason } = data;
@@ -168,6 +171,7 @@ export function openLandAuthForm(player, myLand) {
       useButton: formValues?.[4],
       useEntity: formValues?.[5],
       explode: formValues?.[6],
+      burn: formValues?.[7],
     };
     land.db.set(_myLand.name, {
       ..._myLand,
@@ -417,6 +421,7 @@ export function openLandAuthConfigForm(player, _land) {
   form.toggle(color.white('是否允许成员配置 按钮是否公开'), _land.config_public_auth.useButton ?? false);
   form.toggle(color.white('是否允许成员配置 实体是否允许交互'), _land.config_public_auth.useEntity);
   form.toggle(color.white('是否允许成员配置 爆炸'), _land.config_public_auth.explode);
+  form.toggle(color.white('是否允许成员配置 岩浆或燃烧'), _land.config_public_auth.burn);
   form.submitButton('确认');
   form.show(player).then(data => {
     const { formValues, cancelationReason } = data;
@@ -429,6 +434,7 @@ export function openLandAuthConfigForm(player, _land) {
       useButton: formValues?.[4],
       useEntity: formValues?.[5],
       explode: formValues?.[6],
+      burn: formValues?.[7],
     };
     land.db.set(_land.name, {
       ..._land,

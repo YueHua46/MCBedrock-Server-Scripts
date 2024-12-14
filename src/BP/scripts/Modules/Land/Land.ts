@@ -15,6 +15,7 @@ export interface ILand {
     useEntity: boolean
     useButton: boolean
     explode: boolean
+    burn: boolean
   }
   // 领地公开权限的配置权限
   config_public_auth: {
@@ -25,6 +26,7 @@ export interface ILand {
     useEntity: boolean
     useButton: boolean
     explode: boolean
+    burn: boolean
   }
   vectors: {
     start: Vector3
@@ -144,7 +146,6 @@ class Land {
     land.owner = playerName
     return this.db.set(name, land)
   }
-
 }
 
 export default new Land()

@@ -1,6 +1,6 @@
 import { color } from '../../utils/color'
-import { world, system, Entity, Player, BlockComponent } from '@minecraft/server'
-import { debounce } from '../../utils/utils'
+import { world, system, Entity, Player, BlockComponent, BlockVolume, System } from '@minecraft/server'
+import { debounce, SystemLog } from '../../utils/utils'
 import particle from '../Particle'
 import land, { ILand } from './Land'
 import { useNotify } from '../../hooks/hooks'
@@ -346,4 +346,57 @@ world.beforeEvents.itemUseOn.subscribe(event => {
   }
 })
 
-// world.beforeEvents
+// 持续检测所有领地内是否有燃烧，如果领地设置不允许燃烧，则将燃烧替换为空气
+// 燃烧包括：岩浆（lava）、流动岩浆（flowing_lava）、火（fire）、灵魂火（soul_fire）
+system.runInterval(() => {
+  const lands = land.getLandList()
+  for (const land in lands) {
+    const landData = lands[land]
+    if (landData.public_auth.burn) continue
+
+    // try {
+    // 优先采用通过getBlocks的方案来清除对应领地内的燃烧方块
+    clearLandFireByGetBlocks(landData)
+    // BUG: 不管是getBlocks和fill的情况，在玩家离领地区块较远时，会报错，getBlocks会无法读取领地内方块，fill则显示无法在世界外放置方块
+    // } catch (error) {
+    //   // 如果getBlocks失败，则采用fill指令来清除对应领地内的燃烧方块
+    //   clearLandFireByFill(landData)
+    // }
+  }
+}, 20)
+
+// 通过getBlocks来清除领地内的燃烧方块
+function clearLandFireByGetBlocks(landData: ILand) {
+  const landArea = new BlockVolume(landData.vectors.start, landData.vectors.end)
+  const blocks = world.getDimension(landData.dimension).getBlocks(landArea, {
+    includeTypes: ['minecraft:lava', 'minecraft:flowing_lava', 'minecraft:fire', 'minecraft:soul_fire'],
+  })
+  const blocksIterator = blocks.getBlockLocationIterator()
+  for (const blockLocation of blocksIterator) {
+    const block = world.getDimension(landData.dimension).getBlock(blockLocation)
+    if (block) {
+      block.setType('minecraft:air')
+    }
+  }
+}
+
+// 通过fill指令来清除领地内的燃烧方块
+function clearLandFireByFill(landData: ILand) {
+  const start = landData.vectors.start
+  const end = landData.vectors.end
+  // 分层填充空气，避免超过填充限制
+  for (let y = Math.min(start.y, end.y); y <= Math.max(start.y, end.y); y++) {
+    world
+      .getDimension(landData.dimension)
+      .runCommand(`fill ${start.x} ${y} ${start.z} ${end.x} ${y} ${end.z} air replace lava`)
+    world
+      .getDimension(landData.dimension)
+      .runCommand(`fill ${start.x} ${y} ${start.z} ${end.x} ${y} ${end.z} air replace flowing_lava`)
+    world
+      .getDimension(landData.dimension)
+      .runCommand(`fill ${start.x} ${y} ${start.z} ${end.x} ${y} ${end.z} air replace fire`)
+    world
+      .getDimension(landData.dimension)
+      .runCommand(`fill ${start.x} ${y} ${start.z} ${end.x} ${y} ${end.z} air replace soul_fire`)
+  }
+}

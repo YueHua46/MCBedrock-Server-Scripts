@@ -13,7 +13,7 @@ dotenv.config()
 const env = process.env.ENV || 'windows' // linux or windows
 
 let devBpPath, devRpPath
-if (env === 'windwos') {
+if (env === 'windows') {
   devBpPath =
     os.homedir() +
     '\\AppData\\Local\\Packages\\Microsoft.MinecraftUWP_8wekyb3d8bbwe\\LocalState\\games\\com.mojang\\development_behavior_packs'
@@ -168,7 +168,9 @@ async function cleanDevRP() {
 
 async function copyBP() {
   await cleanDevBP()
-  return src(`dist/${bpManifestJson.header.name}/**/*`).pipe(dest(devBpPath + `${env === 'windows' ? '\\' : '/'}${bpManifestJson.header.name}`))
+  return src(`dist/${bpManifestJson.header.name}/**/*`).pipe(
+    dest(devBpPath + `${env === 'windows' ? '\\' : '/'}${bpManifestJson.header.name}`),
+  )
 }
 
 async function copyRP() {
