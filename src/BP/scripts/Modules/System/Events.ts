@@ -5,6 +5,7 @@ import { useItems } from '../../hooks/hooks'
 let isRunning = false
 system.runInterval(async () => {
   if (isRunning) return
+  if (!setting.getState('killItem')) return
   const items = useItems()
   if (items.length > setting.MAX_ITEMS) {
     isRunning = true
