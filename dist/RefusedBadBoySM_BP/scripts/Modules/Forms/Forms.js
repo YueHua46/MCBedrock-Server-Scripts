@@ -2,7 +2,7 @@ import { ActionFormData, FormCancelationReason } from '@minecraft/server-ui';
 import { openPlayerActionForm } from '../Player/Forms';
 import { openLandManageForms } from '../Land/Forms';
 import { openHelpMenuForm } from '../Help/Forms';
-import { useForceOpen } from '../../hooks/hooks';
+import { useForceOpen } from '../../Hooks/hooks';
 import { openBaseFunctionForm } from '../OtherFun/Forms';
 import { openWayPointMenuForms } from '../WayPoint/Forms';
 import { openSystemSettingForm } from '../System/Forms';

@@ -1,6 +1,6 @@
 import { Player, system } from '@minecraft/server'
 import './Event'
-import { color } from '../../utils/color'
+import { color } from '../../Utils/color'
 
 type IPrefix = number
 

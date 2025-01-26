@@ -1,5 +1,5 @@
 import { Player, RawMessage, system, world } from '@minecraft/server'
-import { color } from '../utils/color'
+import { color } from '../Utils/color'
 import { ActionFormData, MessageFormData, ModalFormData } from '@minecraft/server-ui'
 import { MinecraftDimensionTypes } from '../types'
 

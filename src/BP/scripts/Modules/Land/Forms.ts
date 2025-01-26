@@ -1,12 +1,12 @@
 import { ActionFormData, ModalFormData, UIManager } from '@minecraft/server-ui'
-import { color } from '../../utils/color'
+import { color } from '../../Utils/color'
 import { Player, Vector3 } from '@minecraft/server'
 import { MinecraftDimensionTypes } from '@minecraft/vanilla-data'
 import land, { ILand } from './Land'
 import { openServerMenuForm } from '../Forms/Forms'
 import { openDialogForm } from '../Forms/Dialog'
 import { landAreas } from './Event'
-import { useFormatInfo, useFormatListInfo, useGetAllPlayer, useNotify } from '../../hooks/hooks'
+import { useFormatInfo, useFormatListInfo, useGetAllPlayer, useNotify } from '../../Hooks/hooks'
 import { openLandManageForm, openSystemSettingForm } from '../System/Forms'
 
 // 领地申请

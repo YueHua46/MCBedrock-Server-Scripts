@@ -1,5 +1,5 @@
 import { Player } from '@minecraft/server'
-import { getNowDate } from '../../utils/utils'
+import { getNowDate } from '../../Utils/utils'
 import { Database } from '../Database'
 
 interface ILeaveMessage {

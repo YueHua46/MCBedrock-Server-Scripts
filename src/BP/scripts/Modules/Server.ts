@@ -1,6 +1,6 @@
 import { EntitySpawnAfterEvent, system, world } from '@minecraft/server'
-import getTPS from '../utils/tps'
-import { oneSecondRunInterval } from '../utils/utils'
+import getTPS from '../Utils/tps'
+import { oneSecondRunInterval } from '../Utils/utils'
 
 class Server {
   TPS: number = 0

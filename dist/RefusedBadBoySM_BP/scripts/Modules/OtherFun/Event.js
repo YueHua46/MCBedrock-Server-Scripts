@@ -1,7 +1,7 @@
 import { world } from '@minecraft/server';
-import { color } from '../../utils/color';
+import { color } from '../../Utils/color';
 import prefix from './Prefix';
-import { useGetAllPlayer } from '../../hooks/hooks';
+import { useGetAllPlayer } from '../../Hooks/hooks';
 // name prefix
 world.beforeEvents.chatSend.subscribe(e => {
   const { message, sender } = e;

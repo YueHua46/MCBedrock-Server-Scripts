@@ -1,14 +1,14 @@
 import { system, world } from '@minecraft/server'
 import setting from './Setting'
-import { useItems } from '../../hooks/hooks'
+import { useItems } from '../../Hooks/hooks'
 
 let isRunning = false
 system.runInterval(async () => {
-  const killItem = setting.getState('killItem')
+  const killItemAmount = setting.getState('killItemAmount')
   if (isRunning) return
-  if (!killItem) return
+  if (!killItemAmount) return
   const items = useItems()
-  if (items.length > Number(killItem)) {
+  if (items.length > Number(killItemAmount)) {
     isRunning = true
     world.sendMessage(' §e服务器掉落物过多，即将在30秒后清理掉落物！')
     await system.waitTicks(20 * 25)

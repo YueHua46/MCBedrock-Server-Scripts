@@ -1,9 +1,9 @@
 import { Dimension, ItemStack, Player, Vector3, world } from '@minecraft/server'
 import { Database } from '../Database'
 import { MinecraftDimensionTypes } from '../../types'
-import { useNotify } from '../../hooks/hooks'
-import { getNowDate } from '../../utils/utils'
-import { color } from '../../utils/color'
+import { useNotify } from '../../Hooks/hooks'
+import { getNowDate } from '../../Utils/utils'
+import { color } from '../../Utils/color'
 
 export interface IWayPoint {
   name: string

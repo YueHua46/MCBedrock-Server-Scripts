@@ -5,9 +5,9 @@ import { RandomTp } from './RandomTp'
 import server from '../Server'
 import prefix from './Prefix'
 import { openDialogForm } from '../Forms/Dialog'
-import { color } from '../../utils/color'
+import { color } from '../../Utils/color'
 import leaveMessage from './LeaveMessage'
-import { useNotify } from '../../hooks/hooks'
+import { useNotify } from '../../Hooks/hooks'
 
 function createServerInfoForm() {
   const form = new MessageFormData()

@@ -1,7 +1,7 @@
 import { Player } from '@minecraft/server'
 import { ActionFormData, MessageFormData } from '@minecraft/server-ui'
-import { useFormatInfo } from '../../hooks/hooks'
-import { color } from '../../utils/color'
+import { useFormatInfo } from '../../Hooks/hooks'
+import { color } from '../../Utils/color'
 import { openServerMenuForm } from '../Forms/Forms'
 
 // 如何圈地帮助表单
@@ -28,7 +28,7 @@ export const openHowToLandForm = (player: Player) => {
         color.green('申请领地后，这个时候起始坐标和结束坐标是已经自动填写完刚才我们设置的坐标点了\n') +
         color.yellow('5. ') +
         color.green('然后输入完对应的领地名称后，点击申请即可完成圈地\n'),
-    })
+    }),
   )
   form.button1('了解')
   form.button2('返回')
@@ -59,7 +59,7 @@ export const openServerMenuLostForm = (player: Player) => {
         color.green('如果你丢失了服务器菜单，请在聊天栏里输入：服务器菜单，即可打开服务器菜单\n') +
         color.yellow('2. ') +
         color.green('打开服务器菜单后，点击功能：给予我服务器菜单 即可\n'),
-    })
+    }),
   )
   form.button1('了解')
   form.button2('返回')

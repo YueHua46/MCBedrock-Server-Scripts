@@ -1,4 +1,4 @@
-import { SystemLog } from '../../utils/utils'
+import { SystemLog } from '../../Utils/utils'
 import { Database } from '../Database'
 import './Events'
 
@@ -11,6 +11,7 @@ export type IModules =
   | 'sm'
   | 'setting'
   | 'killItem'
+  | 'killItemAmount'
   | 'randomTpRange'
 
 class ServerSetting {
@@ -33,7 +34,8 @@ class ServerSetting {
     this.db.set('help', true)
     this.db.set('sm', true)
     this.db.set('setting', true)
-    this.db.set('killItem', this.MAX_ITEMS)
+    this.db.set('killItem', true)
+    this.db.set('killItemAmount', this.MAX_ITEMS)
     this.db.set('randomTpRange', this.RANDOM_TP_RANGE)
   }
   getState(module: IModules) {

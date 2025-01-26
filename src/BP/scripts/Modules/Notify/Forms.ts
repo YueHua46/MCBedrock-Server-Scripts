@@ -1,6 +1,6 @@
 import { Player } from '@minecraft/server'
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui'
-import { color } from '../../utils/color'
+import { color } from '../../Utils/color'
 import { openDialogForm } from '../Forms/Dialog'
 import notify from './Notify'
 import { openSystemSettingForm } from '../System/Forms'

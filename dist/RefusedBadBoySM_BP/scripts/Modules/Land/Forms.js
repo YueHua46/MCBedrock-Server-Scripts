@@ -1,10 +1,10 @@
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
-import { color } from '../../utils/color';
+import { color } from '../../Utils/color';
 import land from './Land';
 import { openServerMenuForm } from '../Forms/Forms';
 import { openDialogForm } from '../Forms/Dialog';
 import { landAreas } from './Event';
-import { useFormatListInfo, useGetAllPlayer, useNotify } from '../../hooks/hooks';
+import { useFormatListInfo, useGetAllPlayer, useNotify } from '../../Hooks/hooks';
 import { openLandManageForm } from '../System/Forms';
 // 领地申请
 function createLandApplyForm(player) {

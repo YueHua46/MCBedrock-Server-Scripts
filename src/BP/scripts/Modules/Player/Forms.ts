@@ -1,8 +1,8 @@
 import { Player, world } from '@minecraft/server'
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui'
 import { openServerMenuForm } from '../Forms/Forms'
-import { useGetAllPlayer } from '../../hooks/hooks'
-import { color } from '../../utils/color'
+import { useGetAllPlayer } from '../../Hooks/hooks'
+import { color } from '../../Utils/color'
 import PlayerSetting, { EFunNames } from './PlayerSetting'
 import { openDialogForm } from '../Forms/Dialog'
 

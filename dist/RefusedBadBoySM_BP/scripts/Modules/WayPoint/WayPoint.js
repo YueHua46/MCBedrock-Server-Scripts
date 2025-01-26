@@ -1,8 +1,8 @@
 import { world } from '@minecraft/server';
 import { Database } from '../Database';
-import { useNotify } from '../../hooks/hooks';
-import { getNowDate } from '../../utils/utils';
-import { color } from '../../utils/color';
+import { useNotify } from '../../Hooks/hooks';
+import { getNowDate } from '../../Utils/utils';
+import { color } from '../../Utils/color';
 class WayPoint {
   constructor() {
     this.db = new Database('waypoint');

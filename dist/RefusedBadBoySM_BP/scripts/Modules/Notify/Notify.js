@@ -1,5 +1,5 @@
 import { system, world } from '@minecraft/server';
-import { getNowDate } from '../../utils/utils';
+import { getNowDate } from '../../Utils/utils';
 import { Database } from '../Database';
 class Notify {
   constructor(db = new Database('notify')) {

@@ -1,6 +1,6 @@
 import { ActionFormData, MessageFormData } from '@minecraft/server-ui';
-import { useFormatInfo } from '../../hooks/hooks';
-import { color } from '../../utils/color';
+import { useFormatInfo } from '../../Hooks/hooks';
+import { color } from '../../Utils/color';
 import { openServerMenuForm } from '../Forms/Forms';
 // 如何圈地帮助表单
 const createHowToLandForm = () => {

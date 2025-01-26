@@ -1,5 +1,5 @@
 import { Player, system, Vector3 } from '@minecraft/server'
-import { color } from '../utils/color'
+import { color } from '../Utils/color'
 
 class Particle {
   constructor() {}
@@ -77,7 +77,7 @@ class Particle {
 
   createParticleLine(player: Player, startPos: Vector3, endPos: Vector3) {
     const distance = Math.sqrt(
-      Math.pow(endPos.x - startPos.x, 2) + Math.pow(endPos.y - startPos.y, 2) + Math.pow(endPos.z - startPos.z, 2)
+      Math.pow(endPos.x - startPos.x, 2) + Math.pow(endPos.y - startPos.y, 2) + Math.pow(endPos.z - startPos.z, 2),
     )
     if (distance === 0) {
       //   player.sendMessage(color.red('错误：起始点和结束点相同，无法生成线段'))

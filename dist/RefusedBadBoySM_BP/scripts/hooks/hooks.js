@@ -1,5 +1,5 @@
 import { system, world } from '@minecraft/server';
-import { color } from '../utils/color';
+import { color } from '../Utils/color';
 import { MinecraftDimensionTypes } from '../types';
 export function useGetAllPlayer() {
   return world.getAllPlayers();

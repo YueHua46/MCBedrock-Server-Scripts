@@ -1,5 +1,5 @@
 import { Player } from '@minecraft/server'
-import { useNotify } from '../../hooks/hooks'
+import { useNotify } from '../../Hooks/hooks'
 import { MinecraftEffectTypes } from '../../types'
 import setting from '../System/Setting'
 

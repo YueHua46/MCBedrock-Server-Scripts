@@ -1,4 +1,4 @@
-import { getNowDate } from '../../utils/utils';
+import { getNowDate } from '../../Utils/utils';
 import { Database } from '../Database';
 class LeaveMessage {
   constructor(db = new Database('leaveMessage')) {

@@ -1,15 +1,15 @@
 import { Player, world } from '@minecraft/server'
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui'
-import { color } from '../../utils/color'
+import { color } from '../../Utils/color'
 import setting, { IModules } from './Setting'
-import { useNotify } from '../../hooks/hooks'
+import { useNotify } from '../../Hooks/hooks'
 import { openLandDetailForm, openLandListForm } from '../Land/Forms'
 import land, { ILand } from '../Land/Land'
 import { openDialogForm } from '../Forms/Dialog'
 import { openServerMenuForm } from '../Forms/Forms'
 import { openWayPointListForm } from '../WayPoint/Forms'
 import { openNotifyForms } from '../Notify/Forms'
-import { SystemLog } from '../../utils/utils'
+import { SystemLog } from '../../Utils/utils'
 // 创建搜索玩家领地表单
 function createSearchLandForm() {
   const form = new ModalFormData()
@@ -224,18 +224,18 @@ export const openFunctionSwitchForm = (player: Player) => {
 export const openKillItemSettingForm = (player: Player) => {
   SystemLog('openKillItemSettingForm enter')
   const form = new ModalFormData()
-  const killItem = (setting.getState('killItem') as string) || '1500'
+  const killItemAmount = (setting.getState('killItemAmount') as string) || '1500'
   try {
-    SystemLog('killItem -->' + killItem)
+    SystemLog('killItemAmount -->' + killItemAmount)
     form.title('§w触发掉落物清理的上限设置')
-    form.textField('触发掉落物清理的数量上限', killItem.toString())
+    form.textField('触发掉落物清理的数量上限', killItemAmount.toString())
     form.submitButton('§w确定')
     form.show(player).then(data => {
       if (data.canceled || data.cancelationReason) return
       const { formValues } = data
       if (formValues?.[0]) {
         const num = formValues[0].toString()
-        setting.setState('killItem', num)
+        setting.setState('killItemAmount', num)
         openDialogForm(
           player,
           {

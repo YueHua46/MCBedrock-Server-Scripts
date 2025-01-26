@@ -1,8 +1,8 @@
 import { ActionFormData, ModalFormData } from '@minecraft/server-ui';
-import { color } from '../../utils/color';
+import { color } from '../../Utils/color';
 import { openServerMenuForm } from '../Forms/Forms';
 import wayPoint from './WayPoint';
-import { useFormatListInfo, useNotify } from '../../hooks/hooks';
+import { useFormatListInfo, useNotify } from '../../Hooks/hooks';
 import { MinecraftDimensionTypes } from '../../types';
 import { openConfirmDialogForm, openDialogForm } from '../Forms/Dialog';
 import { openSystemSettingForm } from '../System/Forms';

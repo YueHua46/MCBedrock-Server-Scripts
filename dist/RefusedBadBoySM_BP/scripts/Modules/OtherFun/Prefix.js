@@ -1,6 +1,6 @@
 import { system } from '@minecraft/server';
 import './Event';
-import { color } from '../../utils/color';
+import { color } from '../../Utils/color';
 class Prefix {
   constructor() {
     this.prefix = ['', '', '', ''];

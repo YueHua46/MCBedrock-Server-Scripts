@@ -1,9 +1,9 @@
-import { color } from '../../utils/color'
+import { color } from '../../Utils/color'
 import { world, system, Entity, Player, BlockComponent, BlockVolume, System } from '@minecraft/server'
-import { debounce, SystemLog } from '../../utils/utils'
+import { debounce, SystemLog } from '../../Utils/utils'
 import particle from '../Particle'
 import land, { ILand } from './Land'
-import { useNotify } from '../../hooks/hooks'
+import { useNotify } from '../../Hooks/hooks'
 import { MinecraftBlockTypes } from '../../types'
 
 interface LandArea {
@@ -352,16 +352,20 @@ system.runInterval(() => {
   const lands = land.getLandList()
   for (const land in lands) {
     const landData = lands[land]
+    // 修复旧存档burn权限初始化问题
+    if (landData.public_auth.burn === undefined) {
+      landData.public_auth.burn = true
+    }
     if (landData.public_auth.burn) continue
 
-    // try {
-    // 优先采用通过getBlocks的方案来清除对应领地内的燃烧方块
-    clearLandFireByGetBlocks(landData)
-    // BUG: 不管是getBlocks和fill的情况，在玩家离领地区块较远时，会报错，getBlocks会无法读取领地内方块，fill则显示无法在世界外放置方块
-    // } catch (error) {
-    //   // 如果getBlocks失败，则采用fill指令来清除对应领地内的燃烧方块
-    //   clearLandFireByFill(landData)
-    // }
+    try {
+      // 优先采用通过getBlocks的方案来清除对应领地内的燃烧方块
+      clearLandFireByGetBlocks(landData)
+      // BUG: 不管是getBlocks和fill的情况，在玩家离领地区块较远时，会报错，getBlocks会无法读取领地内方块，fill则显示无法在世界外放置方块
+    } catch (error) {
+      // 如果getBlocks失败，则采用fill指令来清除对应领地内的燃烧方块
+      clearLandFireByFill(landData)
+    }
   }
 }, 20)
 

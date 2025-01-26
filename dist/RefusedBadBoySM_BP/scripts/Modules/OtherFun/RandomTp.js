@@ -1,4 +1,4 @@
-import { useNotify } from '../../hooks/hooks';
+import { useNotify } from '../../Hooks/hooks';
 import { MinecraftEffectTypes } from '../../types';
 import setting from '../System/Setting';
 // 根据两个大小参数区间，来生成随机数

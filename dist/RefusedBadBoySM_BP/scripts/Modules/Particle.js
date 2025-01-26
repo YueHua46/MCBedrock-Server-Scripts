@@ -1,5 +1,5 @@
 import { system } from '@minecraft/server';
-import { color } from '../utils/color';
+import { color } from '../Utils/color';
 class Particle {
   constructor() {}
   createLandParticle(player, pos) {
