@@ -128,7 +128,7 @@ class Land {
     const blockCount = this.calculateBlockCount(landData.vectors.start, landData.vectors.end);
     // 验证方块数量是否超过上限
     if (blockCount > maxLandBlocks) {
-      return `领地方块数量(${blockCount})超过上限(${maxLandBlocks})，请重新设置领地，确保其不超过系统设置方块上限`;
+      return `领地方块数量(${blockCount})超过上限(${maxLandBlocks})，请重新设置领地。确保其不超过系统设置方块上限\n管理员可通过 【服务器设置】 -> 【通用系统设置】 -> 【设置领地方块上限】 来更改上限`;
     }
     // 其他验证逻辑...
     // 保存领地数据
