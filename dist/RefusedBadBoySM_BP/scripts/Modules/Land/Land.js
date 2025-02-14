@@ -1,5 +1,6 @@
 import { BlockVolume } from '@minecraft/server';
 import { Database } from '../Database';
+import Setting from '../System/Setting';
 /**
  * Land module
  */
@@ -21,7 +22,7 @@ class Land {
   addLand(land) {
     if (this.db.has(land.name)) return '领地名冲突，已存在，请尝试其他领地名称';
     if (this.checkOverlap(land)) return '领地重叠，请重新设置领地范围';
-    return this.db.set(land.name, land);
+    return this.createLand(land);
   }
   getLand(name) {
     if (!this.db.has(name)) return '领地不存在';
@@ -99,9 +100,13 @@ class Land {
           insideLand: null,
         };
   }
+  // 获取所有有领地的玩家
+  getLandPlayers() {
+    return Array.from(new Set(Object.values(this.db.getAll()).map(land => land.owner)));
+  }
+  // 获取指定玩家的所有领地
   getPlayerLands(playerName) {
-    const lands = this.db.values();
-    return lands.filter(land => land.owner === playerName);
+    return Object.values(this.db.getAll()).filter(land => land.owner === playerName);
   }
   // 领地转让
   transferLand(name, playerName) {
@@ -109,6 +114,26 @@ class Land {
     const land = this.db.get(name);
     land.owner = playerName;
     return this.db.set(name, land);
+  }
+  // 计算两个坐标点之间的方块数量
+  calculateBlockCount(start, end) {
+    const bv = new BlockVolume(start, end);
+    return bv.getCapacity();
+  }
+  // 创建领地时添加方块数量验证
+  createLand(landData) {
+    // 获取领地方块上限
+    const maxLandBlocks = Number(Setting.getState('maxLandBlocks') || '30000');
+    // 计算领地方块数量
+    const blockCount = this.calculateBlockCount(landData.vectors.start, landData.vectors.end);
+    // 验证方块数量是否超过上限
+    if (blockCount > maxLandBlocks) {
+      return `领地方块数量(${blockCount})超过上限(${maxLandBlocks})，请重新设置领地，确保其不超过系统设置方块上限`;
+    }
+    // 其他验证逻辑...
+    // 保存领地数据
+    this.db.set(landData.name, landData);
+    return true;
   }
 }
 export default new Land();

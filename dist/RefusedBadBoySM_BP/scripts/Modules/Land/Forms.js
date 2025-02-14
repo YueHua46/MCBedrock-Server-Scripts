@@ -6,6 +6,7 @@ import { openDialogForm } from '../Forms/Dialog';
 import { landAreas } from './Event';
 import { useFormatListInfo, useGetAllPlayer, useNotify } from '../../Hooks/hooks';
 import { openLandManageForm } from '../System/Forms';
+import { getDiamensionName } from '../../Utils/utils';
 // 领地申请
 function createLandApplyForm(player) {
   const form = new ModalFormData();
@@ -453,15 +454,15 @@ export function openLandAuthConfigForm(player, _land) {
   });
 }
 // 领地详细与管理
-export function openLandDetailForm(player, land, isAdmin = false) {
+export const openLandDetailForm = (player, landData, isAdmin = false, returnForm) => {
   const form = new ActionFormData();
   form.title('领地详细');
-  const isOwner = land.owner === player.name;
+  const isOwner = landData.owner === player.name;
   const buttons = [
     {
       text: '领地公开权限',
       icon: 'textures/ui/icon_multiplayer',
-      action: () => openLandAuthForm(player, land),
+      action: () => openLandAuthForm(player, landData),
     },
   ];
   if (isOwner || isAdmin) {
@@ -469,22 +470,22 @@ export function openLandDetailForm(player, land, isAdmin = false) {
       {
         text: '领地成员管理',
         icon: 'textures/ui/friend1_black_outline_2x',
-        action: () => openLandMemberForm(player, land),
+        action: () => openLandMemberForm(player, landData),
       },
       {
         text: '领地转让',
         icon: 'textures/ui/arrow_right',
-        action: () => openLandTransferForm(player, land),
+        action: () => openLandTransferForm(player, landData),
       },
       {
         text: '领地公开权限的配置权限',
         icon: 'textures/ui/arrow_right',
-        action: () => openLandAuthConfigForm(player, land),
+        action: () => openLandAuthConfigForm(player, landData),
       },
       {
         text: '删除领地',
         icon: 'textures/ui/cancel',
-        action: () => openLandDeleteForm(player, land, isAdmin),
+        action: () => openLandDeleteForm(player, landData, isAdmin),
       },
     ];
     buttons.push(...actions);
@@ -492,7 +493,11 @@ export function openLandDetailForm(player, land, isAdmin = false) {
   buttons.push({
     text: '返回',
     icon: 'textures/ui/dialog_bubble_point',
-    action: () => openLandListForm(player, isAdmin),
+    action: () => {
+      if (returnForm) returnForm();
+      else if (isAdmin) openAllPlayerLandManageForm(player);
+      else openLandListForm(player);
+    },
   });
   buttons.forEach(button => {
     form.button(button.text, button.icon);
@@ -503,29 +508,32 @@ export function openLandDetailForm(player, land, isAdmin = false) {
         title: '领地信息',
         desc: '',
         list: [
-          '领地名称: ' + color.yellow(land.name),
+          '领地名称: ' + color.yellow(landData.name),
           '领地坐标: ' +
             color.yellow(
-              land.vectors.start.x +
+              landData.vectors.start.x +
                 ' ' +
-                land.vectors.start.y +
+                landData.vectors.start.y +
                 ' ' +
-                land.vectors.start.z +
+                landData.vectors.start.z +
                 ' -> ' +
-                land.vectors.end.x +
+                landData.vectors.end.x +
                 ' ' +
-                land.vectors.end.y +
+                landData.vectors.end.y +
                 ' ' +
-                land.vectors.end.z,
+                landData.vectors.end.z,
             ),
         ],
       },
-      { title: '领地主人', desc: land.owner, list: [] },
-      { title: '领地成员', desc: land.members.join('、 '), list: [] },
+      { title: '领地主人', desc: landData.owner, list: [] },
+      { title: '领地成员', desc: landData.members.join('、 '), list: [] },
     ]),
   );
   form.show(player).then(data => {
-    if (data.canceled || data.cancelationReason) return;
+    if (data.canceled || data.cancelationReason) {
+      if (returnForm) returnForm();
+      return;
+    }
     if (data.selection === null || data.selection === undefined) return;
     switch (data.selection) {
       default:
@@ -533,7 +541,7 @@ export function openLandDetailForm(player, land, isAdmin = false) {
         break;
     }
   });
-}
+};
 // 创建领地列表表单
 function createLandListForm() {
   const form = new ActionFormData();
@@ -603,13 +611,13 @@ export function openLandListForm(player, isAdmin = false, page = 1) {
         // 选择的是某个领地
         openLandDetailForm(player, currentPageLands[selectionIndex], isAdmin);
       } else if (selectionIndex === previousButtonIndex - 1 && page > 1) {
-        // 选择的是“上一页”
+        // 选择的是"上一页"
         openLandListForm(player, isAdmin, page - 1);
       } else if (selectionIndex === nextButtonIndex - 1 && page < totalPages) {
-        // 选择的是“下一页”
+        // 选择的是"下一页"
         openLandListForm(player, isAdmin, page + 1);
       } else if (selectionIndex === nextButtonIndex) {
-        // 选择的是“返回”
+        // 选择的是"返回"
         if (!isAdmin) openLandManageForms(player);
         else openLandManageForm(player);
       }
@@ -656,3 +664,113 @@ export function openLandManageForms(player) {
     }
   });
 }
+// 打开玩家领地列表表单
+export const openPlayerLandListForm = (player, targetPlayerName, page = 1, isAdmin = false, returnForm) => {
+  const form = new ActionFormData();
+  form.title(`${color.blue(targetPlayerName)}的领地列表`);
+  // 获取该玩家的所有领地
+  const playerLands = Object.values(land.getLandList()).filter(l => l.owner === targetPlayerName);
+  // 计算分页信息
+  const pageSize = 10;
+  const totalPages = Math.ceil(playerLands.length / pageSize);
+  const start = (page - 1) * pageSize;
+  const end = Math.min(start + pageSize, playerLands.length);
+  const currentPageLands = playerLands.slice(start, end);
+  // 添加领地按钮
+  currentPageLands.forEach(landData => {
+    form.button(
+      `${landData.name}\n${getDiamensionName(landData.dimension)} (${landData.vectors.start.x}, ${landData.vectors.start.y}, ${landData.vectors.start.z})`,
+      'textures/ui/World',
+    );
+  });
+  // 添加分页按钮
+  let previousButtonIndex = currentPageLands.length;
+  let nextButtonIndex = currentPageLands.length;
+  if (page > 1) {
+    form.button('§w上一页', 'textures/ui/arrow_left');
+    previousButtonIndex++;
+    nextButtonIndex++;
+  }
+  if (page < totalPages) {
+    form.button('§w下一页', 'textures/ui/arrow_right');
+    nextButtonIndex++;
+  }
+  form.button('§w返回', 'textures/ui/dialog_bubble_point');
+  form.body(`第 ${page} 页 / 共 ${totalPages} 页\n§7总计: ${playerLands.length} 个领地`);
+  form.show(player).then(data => {
+    if (data.canceled || data.cancelationReason) return;
+    const selectionIndex = data.selection;
+    if (selectionIndex === null || selectionIndex === undefined) return;
+    const currentPageLandsCount = currentPageLands.length;
+    if (selectionIndex < currentPageLandsCount) {
+      // 选择了某个领地
+      openLandDetailForm(player, currentPageLands[selectionIndex], isAdmin, () =>
+        openPlayerLandListForm(player, targetPlayerName, page, isAdmin, returnForm),
+      );
+    } else if (selectionIndex === previousButtonIndex - 1 && page > 1) {
+      // 点击了"上一页"
+      openPlayerLandListForm(player, targetPlayerName, page - 1, isAdmin, returnForm);
+    } else if (selectionIndex === nextButtonIndex - 1 && page < totalPages) {
+      // 点击了"下一页"
+      openPlayerLandListForm(player, targetPlayerName, page + 1, isAdmin, returnForm);
+    } else {
+      // 点击了"返回"
+      if (returnForm) returnForm();
+    }
+  });
+};
+// 打开所有玩家领地管理表单
+export const openAllPlayerLandManageForm = (player, page = 1) => {
+  const form = new ActionFormData();
+  form.title('§w玩家领地管理');
+  // 从数据库中获取所有有领地记录的玩家列表
+  const players = land.getLandPlayers();
+  // 计算分页信息
+  const pageSize = 10;
+  const totalPages = Math.ceil(players.length / pageSize);
+  const start = (page - 1) * pageSize;
+  const end = Math.min(start + pageSize, players.length);
+  const currentPagePlayers = players.slice(start, end);
+  // 为当前页的每个玩家添加按钮
+  currentPagePlayers.forEach(playerName => {
+    const playerLands = Object.values(land.getLandList()).filter(l => l.owner === playerName);
+    form.button(
+      `${color.blue(playerName)} 的所有领地\n${color.darkPurple('领地数量:')} ${playerLands.length}`,
+      'textures/ui/icon_steve',
+    );
+  });
+  // 添加分页按钮
+  let previousButtonIndex = currentPagePlayers.length;
+  let nextButtonIndex = currentPagePlayers.length;
+  if (page > 1) {
+    form.button('§w上一页', 'textures/ui/arrow_left');
+    previousButtonIndex++;
+    nextButtonIndex++;
+  }
+  if (page < totalPages) {
+    form.button('§w下一页', 'textures/ui/arrow_right');
+    nextButtonIndex++;
+  }
+  form.button('§w返回', 'textures/ui/dialog_bubble_point');
+  form.body(`第 ${page} 页 / 共 ${totalPages} 页`);
+  form.show(player).then(data => {
+    if (data.canceled || data.cancelationReason) return;
+    const selectionIndex = data.selection;
+    if (selectionIndex === null || selectionIndex === undefined) return;
+    const currentPagePlayersCount = currentPagePlayers.length;
+    if (selectionIndex < currentPagePlayersCount) {
+      // 选择了某个玩家
+      const selectedPlayer = currentPagePlayers[selectionIndex];
+      openPlayerLandListForm(player, selectedPlayer, 1, true, () => openAllPlayerLandManageForm(player, page));
+    } else if (selectionIndex === previousButtonIndex - 1 && page > 1) {
+      // 点击了"上一页"
+      openAllPlayerLandManageForm(player, page - 1);
+    } else if (selectionIndex === nextButtonIndex - 1 && page < totalPages) {
+      // 点击了"下一页"
+      openAllPlayerLandManageForm(player, page + 1);
+    } else {
+      // 点击了"返回"
+      openLandManageForm(player);
+    }
+  });
+};
