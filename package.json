@@ -36,10 +36,10 @@
     "glob-parent": "6.0.2"
   },
   "dependencies": {
-    "@minecraft/server": "1.17.0-beta.1.21.50-stable",
-    "@minecraft/server-net": "1.0.0-beta.1.21.50-stable",
-    "@minecraft/server-ui": "1.4.0-beta.1.21.50-stable",
-    "@minecraft/vanilla-data": "1.21.50",
+    "@minecraft/server": "1.18.0-beta.1.21.60-stable",
+    "@minecraft/server-net": "1.0.0-beta.1.21.60-stable",
+    "@minecraft/server-ui": "1.4.0-beta.1.21.60-stable",
+    "@minecraft/vanilla-data": "1.21.60",
     "archiver": "^6.0.1",
     "esm": "^3.2.25",
     "gulp-changed": "^5.0.2",

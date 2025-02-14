@@ -85,6 +85,11 @@ class WayPoint {
   getPointsByPlayer(playerName) {
     return this.db.values().filter(p => p.playerName === playerName);
   }
+  // 获取所有存有坐标点的用户
+  getWayPointPlayers() {
+    return Array.from(new Set(this.db.values().map(p => p.playerName)));
+  }
+  // 切换坐标点是否收藏
   toggleStar(pointName, isStarred) {
     const wayPoint = this.db.get(pointName);
     if (!wayPoint) return '坐标点不存在';
