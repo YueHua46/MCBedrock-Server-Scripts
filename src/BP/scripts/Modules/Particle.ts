@@ -99,11 +99,13 @@ class Particle {
         player.sendMessage(color.red('错误：生成粒子时出现无效坐标'))
         return
       }
-      player.spawnParticle('minecraft:endrod', {
-        x: pos.x + 0.5,
-        y: pos.y + 0.3,
-        z: pos.z + 0.5,
-      })
+      try {
+        player.spawnParticle('minecraft:endrod', {
+          x: pos.x + 0.5,
+          y: pos.y + 0.3,
+          z: pos.z + 0.5,
+        })
+      } catch (error) {}
     }
   }
 

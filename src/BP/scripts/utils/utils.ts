@@ -30,3 +30,17 @@ export function getNowDate() {
   const minutes = date.getMinutes().toString().padStart(2, '0')
   return `${year}/${month}/${day} ${hours}:${minutes}`
 }
+
+
+export function getDiamensionName(dimention: string) {
+  switch (dimention) {
+    case 'minecraft:overworld':
+      return '主世界'
+    case 'minecraft:the_nether':
+      return '地狱'
+    case 'minecraft:the_end':
+      return '末地'
+    default:
+      return dimention
+  }
+}

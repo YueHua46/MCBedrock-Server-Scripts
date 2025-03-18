@@ -3,13 +3,14 @@ import { ActionFormData, ModalFormData } from '@minecraft/server-ui'
 import { color } from '../../Utils/color'
 import setting, { IModules } from './Setting'
 import { useNotify } from '../../Hooks/hooks'
-import { openLandDetailForm, openLandListForm } from '../Land/Forms'
+import { openAllPlayerLandManageForm, openLandDetailForm, openLandListForm } from '../Land/Forms'
 import land, { ILand } from '../Land/Land'
 import { openDialogForm } from '../Forms/Dialog'
 import { openServerMenuForm } from '../Forms/Forms'
-import { openWayPointListForm } from '../WayPoint/Forms'
+import { openPlayerWayPointListForm, openWayPointListForm } from '../WayPoint/Forms'
 import { openNotifyForms } from '../Notify/Forms'
 import { SystemLog } from '../../Utils/utils'
+import WayPoint from '../WayPoint/WayPoint'
 // 创建搜索玩家领地表单
 function createSearchLandForm() {
   const form = new ModalFormData()
@@ -87,14 +88,84 @@ const openSearchResultsForm = (player: Player, lands: ILand[], playerName: strin
       // 选择的是某个领地
       openLandDetailForm(player, currentPageLands[selectionIndex], false)
     } else if (selectionIndex === previousButtonIndex - 1 && page > 1) {
-      // 选择的是“上一页”
+      // 选择的是"上一页"
       openSearchResultsForm(player, lands, playerName, page - 1)
     } else if (selectionIndex === nextButtonIndex - 1 && page < totalPages) {
-      // 选择的是“下一页”
+      // 选择的是"下一页"
       openSearchResultsForm(player, lands, playerName, page + 1)
     } else if (selectionIndex === nextButtonIndex) {
-      // 选择的是“返回”
+      // 选择的是"返回"
       openSearchLandForm(player)
+    }
+  })
+}
+
+// 打开玩家坐标点管理表单
+export const openPlayerWayPointManageForm = (player: Player, page: number = 1) => {
+  const form = new ActionFormData()
+  form.title('§w玩家坐标点管理')
+
+  // 从数据库中获取所有有坐标点记录的玩家列表
+  const players = WayPoint.getWayPointPlayers()
+
+  // 计算分页信息
+  const pageSize = 10 // 每页显示10个玩家
+  const totalPages = Math.ceil(players.length / pageSize)
+  const start = (page - 1) * pageSize
+  const end = Math.min(start + pageSize, players.length)
+  const currentPagePlayers = players.slice(start, end)
+
+  // 为当前页的每个玩家添加按钮
+  currentPagePlayers.forEach(playerName => {
+    const waypoints = WayPoint.getPointsByPlayer(playerName)
+    const publicCount = waypoints.filter(p => p.type === 'public').length
+    const privateCount = waypoints.filter(p => p.type === 'private').length
+    form.button(
+      `${color.blue(playerName)} 的所有坐标点\n ${color.darkPurple('公共坐标点:')} ${publicCount} | ${color.darkRed('私有坐标点:')} ${privateCount}`,
+      'textures/ui/icon_steve',
+    )
+  })
+
+  // 添加分页按钮
+  let previousButtonIndex = currentPagePlayers.length
+  let nextButtonIndex = currentPagePlayers.length
+
+  if (page > 1) {
+    form.button('§w上一页', 'textures/ui/arrow_left')
+    previousButtonIndex++
+    nextButtonIndex++
+  }
+
+  if (page < totalPages) {
+    form.button('§w下一页', 'textures/ui/arrow_right')
+    nextButtonIndex++
+  }
+
+  form.button('§w返回', 'textures/ui/dialog_bubble_point')
+  form.body(`第 ${page} 页 / 共 ${totalPages} 页`)
+
+  form.show(player).then(data => {
+    if (data.canceled || data.cancelationReason) return
+
+    const selectionIndex = data.selection
+    if (selectionIndex === null || selectionIndex === undefined) return
+
+    // 当前页的玩家数量
+    const currentPagePlayersCount = currentPagePlayers.length
+
+    if (selectionIndex < currentPagePlayersCount) {
+      // 选择了某个玩家
+      const selectedPlayerName = currentPagePlayers[selectionIndex]
+      openPlayerWayPointListForm(player, selectedPlayerName, 1, () => openPlayerWayPointManageForm(player, page))
+    } else if (selectionIndex === previousButtonIndex - 1 && page > 1) {
+      // 点击了"上一页"
+      openPlayerWayPointManageForm(player, page - 1)
+    } else if (selectionIndex === nextButtonIndex - 1 && page < totalPages) {
+      // 点击了"下一页"
+      openPlayerWayPointManageForm(player, page + 1)
+    } else if ((page === 1 && selectionIndex === nextButtonIndex) || (page > 1 && selectionIndex === nextButtonIndex)) {
+      // 点击了"返回"
+      openSystemSettingForm(player)
     }
   })
 }
@@ -104,16 +175,17 @@ export const openLandManageForm = (player: Player) => {
   const form = new ActionFormData()
   form.title('§w领地管理')
 
-  form.button('§w所有玩家领地列表', 'textures/ui/icon_new')
+  form.button('§w所有玩家领地管理', 'textures/ui/icon_new')
   form.button('§w删除当前所在区域领地', 'textures/ui/redX1')
   form.button('§w搜索玩家领地', 'textures/ui/magnifyingGlass')
+  // form.button('§w玩家坐标点管理', 'textures/ui/icon_steve')
   form.button('§w返回', 'textures/ui/dialog_bubble_point')
 
   form.show(player).then(data => {
     if (data.canceled || data.cancelationReason) return
     switch (data.selection) {
       case 0:
-        openLandListForm(player, true)
+        openAllPlayerLandManageForm(player)
         break
       case 1:
         const { insideLand, isInside } = land.testLand(
@@ -134,12 +206,16 @@ export const openLandManageForm = (player: Player) => {
       case 2:
         openSearchLandForm(player)
         break
+      // case 3:
+      //   openPlayerWayPointManageForm(player)
+      //   break
       case 3:
         openSystemSettingForm(player)
         break
     }
   })
 }
+
 // 打开服务器名称设置表单
 export const openServerNameForm = (player: Player) => {
   const form = new ModalFormData()
@@ -314,6 +390,32 @@ export const openMaxLandPerPlayerSettingForm = (player: Player) => {
     }
   })
 }
+// 设置领地方块上限
+export const openLandBlockLimitForm = (player: Player) => {
+  const form = new ModalFormData()
+  const maxLandBlocks = (setting.getState('maxLandBlocks') as string) || '30000'
+  form.title('§w设置领地方块上限')
+  form.textField('领地方块上限', maxLandBlocks.toString())
+  form.submitButton('§w确定')
+  form.show(player).then(data => {
+    if (data.canceled || data.cancelationReason) return
+    const { formValues } = data
+    if (formValues?.[0]) {
+      const num = formValues[0].toString()
+      setting.setState('maxLandBlocks', num)
+      openDialogForm(
+        player,
+        {
+          title: '领地方块上限设置成功',
+          desc: color.green('领地方块上限设置成功！创建领地时方块数量不能超过设置的上限。'),
+        },
+        () => openSystemSettingForm(player),
+      )
+    } else {
+      useNotify('chat', player, '§c领地方块上限设置失败')
+    }
+  })
+}
 
 // 打开通用系统设置表单
 /**
@@ -322,6 +424,7 @@ export const openMaxLandPerPlayerSettingForm = (player: Player) => {
  * 2. 设置随机传送范围
  * 3. 设置服务器名称
  * 4. 设置服务器通知
+ * 5. 设置创建领地时，领地内方块上限
  */
 export const openCommonSettingForm = (player: Player) => {
   const form = new ActionFormData()
@@ -346,6 +449,11 @@ export const openCommonSettingForm = (player: Player) => {
       text: '设置服务器通知',
       icon: 'textures/ui/icon_book_writable',
       action: () => openNotifyForms(player),
+    },
+    {
+      text: '设置领地方块上限',
+      icon: 'textures/ui/icon_recipe_construction',
+      action: () => openLandBlockLimitForm(player),
     },
     {
       text: '设置玩家最大领地数量',
@@ -383,7 +491,7 @@ export const openSystemSettingForm = (player: Player) => {
     {
       text: '所有玩家坐标点管理',
       icon: 'textures/ui/mashup_world',
-      action: () => openWayPointListForm(player, true),
+      action: () => openPlayerWayPointManageForm(player),
     },
     {
       text: '领地管理',

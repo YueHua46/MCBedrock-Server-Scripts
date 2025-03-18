@@ -1,4 +1,4 @@
-import { BlockVolume, Entity, Player, system, Vector3, world } from '@minecraft/server'
+import { Block, BlockVolume, BlockVolumeBase, Entity, Player, system, Vector3, world } from '@minecraft/server'
 import { Database } from '../Database'
 import { MinecraftDimensionTypes } from '@minecraft/vanilla-data'
 import setting from '../System/Setting'
@@ -63,7 +63,7 @@ class Land {
       return `您已达到最大领地数量限制(${maxLandPerPlayer})，无法创建更多领地`
     }
 
-    return this.db.set(land.name, land)
+    return this.createLand(land)
   }
   getLand(name: string) {
     if (!this.db.has(name)) return '领地不存在'
@@ -143,9 +143,14 @@ class Land {
         insideLand: null,
       }
   }
+  // 获取所有有领地的玩家
+  getLandPlayers() {
+    return Array.from(new Set(Object.values(this.db.getAll()).map(land => land.owner)))
+  }
+
+  // 获取指定玩家的所有领地
   getPlayerLands(playerName: string) {
-    const lands = this.db.values()
-    return lands.filter(land => land.owner === playerName)
+    return Object.values(this.db.getAll()).filter(land => land.owner === playerName)
   }
   // 领地转让
   transferLand(name: string, playerName: string) {
@@ -158,6 +163,27 @@ class Land {
   getPlayerLandCount(playerName: string) {
     const lands = this.db.values()
     return lands.filter(land => land.owner === playerName).length
+  }
+  // 计算两个坐标点之间的方块数量
+  calculateBlockCount(start: Vector3, end: Vector3): number {
+    const bv = new BlockVolume(start, end)
+    return bv.getCapacity()
+  }
+
+  // 创建领地时添加方块数量验证
+  createLand(landData: ILand): string | boolean {
+    // 获取领地方块上限
+    const maxLandBlocks = Number(setting.getState('maxLandBlocks') || '30000')
+    // 计算领地方块数量
+    const blockCount = this.calculateBlockCount(landData.vectors.start, landData.vectors.end)
+    // 验证方块数量是否超过上限
+    if (blockCount > maxLandBlocks) {
+      return `领地方块数量(${blockCount})超过上限(${maxLandBlocks})，请重新设置领地。确保其不超过系统设置方块上限\n管理员可通过 【服务器设置】 -> 【通用系统设置】 -> 【设置领地方块上限】 来更改上限`
+    }
+
+    // 保存领地数据
+    this.db.set(landData.name, landData)
+    return true
   }
 }
 

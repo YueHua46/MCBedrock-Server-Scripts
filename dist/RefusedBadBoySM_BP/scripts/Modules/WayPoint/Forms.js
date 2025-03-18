@@ -3,9 +3,9 @@ import { color } from '../../Utils/color';
 import { openServerMenuForm } from '../Forms/Forms';
 import wayPoint from './WayPoint';
 import { useFormatListInfo, useNotify } from '../../Hooks/hooks';
-import { MinecraftDimensionTypes } from '../../types';
 import { openConfirmDialogForm, openDialogForm } from '../Forms/Dialog';
 import { openSystemSettingForm } from '../System/Forms';
+import { getDiamensionName } from '../../Utils/utils';
 // Constants
 const ITEMS_PER_PAGE = 10;
 // 打开搜索指定用户坐标点表单
@@ -69,7 +69,9 @@ const openSearchResultsForm = (player, wayPoints, playerName, page = 1) => {
       // 选择的是某个坐标点
       const pointName = currentPageWayPoints[selectionIndex].name;
       if (pointName) {
-        openWayPointDetailForm(player, pointName, false, 'public');
+        openWayPointDetailForm(player, pointName, false, 'public', () => {
+          openWayPointMenuForms(player);
+        });
       }
     } else if (selectionIndex === previousButtonIndex - 1 && page > 1) {
       // 选择的是“上一页”
@@ -122,13 +124,11 @@ export const openWayPointUpdateForm = (player, pointName, isAdmin = false) => {
   });
 };
 // 打开坐标点详细
-export const openWayPointDetailForm = (player, pointName, isAdmin = false, type) => {
+export const openWayPointDetailForm = (player, pointName, isAdmin = false, type, returnForm) => {
   const form = new ActionFormData();
   const point = wayPoint.getPoint(pointName);
   if (!point) {
-    return openDialogForm(player, { title: '坐标点不存在', desc: color.red('坐标点不存在！') }, () =>
-      openWayPointListForm(player, isAdmin, type),
-    );
+    return openDialogForm(player, { title: '坐标点不存在', desc: color.red('坐标点不存在！') }, returnForm);
   }
   form.title('坐标点详细');
   form.body(
@@ -143,16 +143,19 @@ export const openWayPointDetailForm = (player, pointName, isAdmin = false, type)
       },
       {
         title: '所在维度',
-        desc:
-          point.dimension === MinecraftDimensionTypes.Overworld
-            ? '主世界'
-            : point.dimension === MinecraftDimensionTypes.Nether
-              ? '下界'
-              : '末地',
+        desc: getDiamensionName(point.dimension),
       },
       {
         title: '坐标点位置',
-        desc: point.location.x + ', ' + point.location.y + ', ' + point.location.z,
+        desc: `${point.location.x}, ${point.location.y}, ${point.location.z}`,
+      },
+      {
+        title: '类型',
+        desc: point.type === 'public' ? color.darkGreen('公开') : color.darkRed('私有'),
+      },
+      {
+        title: '是否置顶',
+        desc: point.isStarred ? color.yellow('是') : '否',
       },
     ]),
   );
@@ -173,7 +176,11 @@ export const openWayPointDetailForm = (player, pointName, isAdmin = false, type)
       {
         text: '编辑',
         icon: 'textures/ui/pencil_edit_icon',
-        action: () => openWayPointUpdateForm(player, pointName, isAdmin),
+        action: () => {
+          openWayPointUpdateForm(player, pointName, isAdmin);
+          // 编辑后返回到详情页
+          openWayPointDetailForm(player, pointName, isAdmin, type, returnForm);
+        },
       },
       {
         text: '删除',
@@ -188,7 +195,7 @@ export const openWayPointDetailForm = (player, pointName, isAdmin = false, type)
                   title: '坐标点删除成功',
                   desc: color.green('坐标点删除成功！'),
                 },
-                () => openWayPointListForm(player, isAdmin, type),
+                returnForm,
               );
             } else {
               openDialogForm(
@@ -197,7 +204,7 @@ export const openWayPointDetailForm = (player, pointName, isAdmin = false, type)
                   title: '坐标点删除失败',
                   desc: color.red('坐标点删除失败！'),
                 },
-                () => openWayPointListForm(player, isAdmin, type),
+                () => openWayPointDetailForm(player, pointName, isAdmin, type, returnForm),
               );
             }
           });
@@ -218,7 +225,7 @@ export const openWayPointDetailForm = (player, pointName, isAdmin = false, type)
                 title: '置顶状态更新成功',
                 desc: color.green('置顶状态更新成功！'),
               },
-              () => openWayPointDetailForm(player, pointName, isAdmin, type),
+              () => openWayPointDetailForm(player, pointName, isAdmin, type, returnForm),
             );
           } else {
             openDialogForm(
@@ -227,7 +234,7 @@ export const openWayPointDetailForm = (player, pointName, isAdmin = false, type)
                 title: '置顶状态更新失败',
                 desc: color.red('置顶状态更新失败！'),
               },
-              () => openWayPointDetailForm(player, pointName, isAdmin, type),
+              () => openWayPointDetailForm(player, pointName, isAdmin, type, returnForm),
             );
           }
         },
@@ -237,7 +244,7 @@ export const openWayPointDetailForm = (player, pointName, isAdmin = false, type)
   buttons.push({
     text: '返回',
     icon: 'textures/ui/dialog_bubble_point',
-    action: () => openWayPointListForm(player, isAdmin, type),
+    action: returnForm,
   });
   buttons.forEach(({ text, icon }) => form.button(text, icon));
   form.show(player).then(data => {
@@ -335,7 +342,9 @@ export const openWayPointListForm = (player, isAdmin = false, type = 'private', 
       // 选择的是某个坐标点
       const pointName = currentPageWayPoints[selectionIndex].name;
       if (pointName) {
-        openWayPointDetailForm(player, pointName, isAdmin, type);
+        openWayPointDetailForm(player, pointName, isAdmin, type, () => {
+          openWayPointListForm(player, isAdmin, type, page);
+        });
       }
     } else if (selectionIndex === previousButtonIndex - 1 && page > 1) {
       // 选择的是“上一页”
@@ -347,6 +356,76 @@ export const openWayPointListForm = (player, isAdmin = false, type = 'private', 
       // 选择的是“返回”
       if (!isAdmin) openWayPointMenuForms(player);
       else openSystemSettingForm(player);
+    }
+  });
+};
+// 按照玩家名称打开坐标点列表
+export const openPlayerWayPointListForm = (player, targetPlayerName, page = 1, returnForm) => {
+  const form = new ActionFormData();
+  form.title(`${color.blue(targetPlayerName)}的坐标点列表`);
+  // 获取该玩家的所有坐标点（包括私有和公开的)}
+  const privatePoints = wayPoint.getPointsByPlayer(targetPlayerName).filter(p => p.type === 'private');
+  const publicPoints = wayPoint.getPointsByPlayer(targetPlayerName).filter(p => p.type === 'public');
+  const allPoints = [...privatePoints, ...publicPoints];
+  // 计算分页信息
+  const totalPages = Math.ceil(allPoints.length / ITEMS_PER_PAGE);
+  const start = (page - 1) * ITEMS_PER_PAGE;
+  const end = Math.min(start + ITEMS_PER_PAGE, allPoints.length);
+  const currentPagePoints = allPoints.slice(start, end);
+  // 添加坐标点按钮
+  currentPagePoints.forEach(point => {
+    const isPublic = point.type === 'public' ? `${color.darkGreen('公开')}` : `${color.darkRed('[私有]')}`;
+    const isStarred = point.isStarred ? `${color.yellow('★')}` : '';
+    form.button(
+      `${isPublic} ${isStarred}${point.name}\n ${getDiamensionName(point.dimension)} (${point.location.x}, ${point.location.y}, ${point.location.z})`,
+      'textures/ui/World',
+    );
+  });
+  // 添加分页按钮
+  let previousButtonIndex = currentPagePoints.length;
+  let nextButtonIndex = currentPagePoints.length;
+  if (page > 1) {
+    form.button('§w上一页', 'textures/ui/arrow_left');
+    previousButtonIndex++;
+    nextButtonIndex++;
+  }
+  if (page < totalPages) {
+    form.button('§w下一页', 'textures/ui/arrow_right');
+    nextButtonIndex++;
+  }
+  form.button('§w返回', 'textures/ui/dialog_bubble_point');
+  form.body(
+    `第 ${page} 页 / 共 ${totalPages} 页\n§7总计: ${allPoints.length} 个坐标点 (私有: ${privatePoints.length}, 公开: ${publicPoints.length})`,
+  );
+  form.show(player).then(data => {
+    if (data.canceled || data.cancelationReason) return;
+    const selectionIndex = data.selection;
+    if (selectionIndex === null || selectionIndex === undefined) return;
+    // 当前页的坐标点数量
+    const currentPagePointsCount = currentPagePoints.length;
+    if (selectionIndex < currentPagePointsCount) {
+      // 选择了某个坐标点
+      const selectedPoint = currentPagePoints[selectionIndex];
+      openWayPointDetailForm(
+        player,
+        selectedPoint.name,
+        true,
+        selectedPoint.type === 'public' ? 'public' : 'private',
+        () => {
+          openPlayerWayPointListForm(player, targetPlayerName, page, returnForm);
+        },
+      );
+    } else if (selectionIndex === previousButtonIndex - 1 && page > 1) {
+      // 点击了"上一页"
+      openPlayerWayPointListForm(player, targetPlayerName, page - 1, returnForm);
+    } else if (selectionIndex === nextButtonIndex - 1 && page < totalPages) {
+      // 点击了"下一页"
+      openPlayerWayPointListForm(player, targetPlayerName, page + 1, returnForm);
+    } else {
+      // 点击了"返回"
+      if (returnForm) {
+        returnForm();
+      }
     }
   });
 };
