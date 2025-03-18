@@ -1,7 +1,7 @@
 import { system } from '@minecraft/server';
 import { color } from '../Utils/color';
 class Particle {
-  constructor() {}
+  constructor() { }
   createLandParticle(player, pos) {
     system.run(() => {
       try {
@@ -10,7 +10,7 @@ class Particle {
           y: pos.y + 0.3,
           z: pos.z + 0.5,
         });
-      } catch (error) {}
+      } catch (error) { }
     });
   }
   createLandParticleArea(player, pos) {
@@ -74,7 +74,7 @@ class Particle {
       //   player.sendMessage(color.red('错误：起始点和结束点相同，无法生成线段'))
       return;
     }
-    const steps = Math.ceil(distance / 1.5); // Adjust the distance between particles
+    const steps = Math.ceil(distance / 1.5); // 调整粒子之间的距离
     const step = {
       x: (endPos.x - startPos.x) / steps,
       y: (endPos.y - startPos.y) / steps,

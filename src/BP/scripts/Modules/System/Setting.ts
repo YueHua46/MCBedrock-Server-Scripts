@@ -13,11 +13,13 @@ export type IModules =
   | 'killItem'
   | 'killItemAmount'
   | 'randomTpRange'
+  | 'maxLandPerPlayer'
 
-class ServerSetting {
+export class ServerSetting {
   MAX_ITEMS = '1500'
   RANDOM_TP_RANGE = '50000'
-  constructor(private readonly db: Database = new Database<boolean>('setting')) {}
+  MAX_LAND_PER_PLAYER = '5'
+  constructor(private readonly db: Database = new Database<boolean>('setting')) { }
   turnOn(module: IModules) {
     console.log(`Turn on ${module}`)
     this.db.set(module, true)
@@ -37,6 +39,7 @@ class ServerSetting {
     this.db.set('killItem', true)
     this.db.set('killItemAmount', this.MAX_ITEMS)
     this.db.set('randomTpRange', this.RANDOM_TP_RANGE)
+    this.db.set('maxLandPerPlayer', this.MAX_LAND_PER_PLAYER)
   }
   getState(module: IModules) {
     if (this.db.get(module) === undefined) this.init()

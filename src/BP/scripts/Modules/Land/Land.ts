@@ -1,6 +1,7 @@
 import { BlockVolume, Entity, Player, system, Vector3, world } from '@minecraft/server'
 import { Database } from '../Database'
 import { MinecraftDimensionTypes } from '@minecraft/vanilla-data'
+import setting from '../System/Setting'
 
 export interface ILand {
   name: string
@@ -55,6 +56,13 @@ class Land {
   addLand(land: ILand) {
     if (this.db.has(land.name)) return '领地名冲突，已存在，请尝试其他领地名称'
     if (this.checkOverlap(land)) return '领地重叠，请重新设置领地范围'
+
+    // 检查玩家领地数量是否达到上限
+    const maxLandPerPlayer = Number(setting.getState('maxLandPerPlayer') || setting.MAX_LAND_PER_PLAYER)
+    if (this.getPlayerLandCount(land.owner) >= maxLandPerPlayer) {
+      return `您已达到最大领地数量限制(${maxLandPerPlayer})，无法创建更多领地`
+    }
+
     return this.db.set(land.name, land)
   }
   getLand(name: string) {
@@ -127,13 +135,13 @@ class Land {
 
     return land
       ? {
-          isInside: true,
-          insideLand: land,
-        }
+        isInside: true,
+        insideLand: land,
+      }
       : {
-          isInside: false,
-          insideLand: null,
-        }
+        isInside: false,
+        insideLand: null,
+      }
   }
   getPlayerLands(playerName: string) {
     const lands = this.db.values()
@@ -145,6 +153,11 @@ class Land {
     const land = this.db.get(name) as ILand
     land.owner = playerName
     return this.db.set(name, land)
+  }
+  // 获取玩家拥有的领地数量
+  getPlayerLandCount(playerName: string) {
+    const lands = this.db.values()
+    return lands.filter(land => land.owner === playerName).length
   }
 }
 

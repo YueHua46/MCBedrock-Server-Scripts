@@ -269,6 +269,52 @@ export const openRandomTpSettingForm = (player: Player) => {
   })
 }
 
+// 设置每个玩家最大领地数量的表单
+export const openMaxLandPerPlayerSettingForm = (player: Player) => {
+  const form = new ModalFormData()
+  form.title('设置玩家最大领地数量')
+
+  const currentValue = setting.getState('maxLandPerPlayer') || setting.MAX_LAND_PER_PLAYER
+
+  form.textField(
+    color.white('每个玩家最大领地数量'),
+    color.gray('请输入每个玩家最大可创建的领地数量'),
+    currentValue.toString()
+  )
+
+  form.show(player).then(data => {
+    if (data.cancelationReason) return
+    const { formValues } = data
+
+    if (formValues && formValues[0]) {
+      const value = formValues[0].toString()
+      const numValue = parseInt(value)
+
+      if (isNaN(numValue) || numValue <= 0) {
+        return openDialogForm(
+          player,
+          {
+            title: '设置失败',
+            desc: color.red('请输入有效的正整数！'),
+          },
+          () => openMaxLandPerPlayerSettingForm(player)
+        )
+      }
+
+      setting.setState('maxLandPerPlayer', value)
+
+      openDialogForm(
+        player,
+        {
+          title: '设置成功',
+          desc: color.green(`成功设置每个玩家最大领地数量为 ${value}`),
+        },
+        () => openCommonSettingForm(player)
+      )
+    }
+  })
+}
+
 // 打开通用系统设置表单
 /**
  * 功能点：
@@ -300,6 +346,11 @@ export const openCommonSettingForm = (player: Player) => {
       text: '设置服务器通知',
       icon: 'textures/ui/icon_book_writable',
       action: () => openNotifyForms(player),
+    },
+    {
+      text: '设置玩家最大领地数量',
+      icon: 'textures/ui/icon_recipe_nature',
+      action: () => openMaxLandPerPlayerSettingForm(player),
     },
   ]
   buttons.forEach(({ text, icon }) => form.button(text, icon))
